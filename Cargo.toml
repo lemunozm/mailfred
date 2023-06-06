@@ -1,6 +1,29 @@
 [package]
 name = "mailfred"
+authors = ["lemunozm <lemunozm@gmail.com>"]
 version = "0.0.0"
 edition = "2021"
+readme = "README.md"
+license = "Apache-2.0"
+description = "Fast and easy-to-use event-driven network library"
+homepage = "https://github.com/lemunozm/mailfred"
+repository = "https://github.com/lemunozm/mailfred"
+keywords = ["imap", "smtp", "server", "email", "service"]
+categories = ["asynchronous", "email", "web-programming"]
 
 [dependencies]
+tokio = { version = "1", features = ["rt", "macros", "sync", "time", "io-std", "io-util", "rt-multi-thread", "signal"] }
+async-trait = "0.1"
+
+# smtp
+mail-send = "0.3"
+mail-builder = "0.2"
+tokio-rustls = "0.24"
+
+# imap
+imap = "3.0.0-alpha.10"
+mail-parser = "0.8"
+native-tls = "0.2"
+
+[dev-dependencies]
+serial_test = "2.0"
