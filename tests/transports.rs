@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use mailfred::{
-    connections::{imap::Imap, smtp::Smtp},
     message::{Message, Receiver, Sender, Transport},
+    transports::{imap::Imap, smtp::Smtp},
 };
 
 mod env {
