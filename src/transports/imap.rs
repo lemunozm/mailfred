@@ -1,4 +1,7 @@
-use std::net::{Shutdown, TcpStream};
+use std::{
+    net::{Shutdown, TcpStream},
+    sync::Arc,
+};
 
 use async_trait::async_trait;
 use imap::{
@@ -7,7 +10,10 @@ use imap::{
 };
 use mail_parser::{HeaderValue, Message as EmailParser};
 use native_tls::{TlsConnector, TlsStream};
-use tokio::sync::mpsc;
+use tokio::{
+    runtime::Handle,
+    sync::{mpsc, Notify},
+};
 
 use crate::message::{Message, Receiver, Transport};
 
@@ -41,19 +47,30 @@ impl Transport for Imap {
             Ok((session, tcp_stream.expect("an stream if connected")))
         })?;
 
+        let ready_to_recv = Arc::new(Notify::new());
         let (tx, rx) = mpsc::channel(1);
 
-        tokio::task::spawn_blocking(move || {
-            let err = listener(session, tx.clone()).expect_err("listener only ends at error");
-            tx.blocking_send(Err(err)).ok();
+        tokio::task::spawn_blocking({
+            let ready_to_recv = ready_to_recv.clone();
+            move || {
+                let err = listener(session, ready_to_recv.clone(), tx.clone())
+                    .expect_err("listener only ends at error");
+
+                tx.blocking_send(Err(err)).ok();
+            }
         });
 
-        Ok(ImapConnection { rx, tcp })
+        Ok(ImapConnection {
+            rx,
+            tcp,
+            ready_to_recv,
+        })
     }
 }
 
 fn listener(
     mut session: Session<TlsStream<TcpStream>>,
+    ready_to_recv: Arc<Notify>,
     tx: mpsc::Sender<imap::Result<Message>>,
 ) -> imap::Result<()> {
     loop {
@@ -61,10 +78,13 @@ fn listener(
 
         for fetch in fetches.iter() {
             if let Ok(msg) = read_message(fetch) {
+                // We want to be sure we only remove the message
+                // if it will be processed.
+                let ready_to_recv = ready_to_recv.clone();
+                Handle::current().block_on(async move { ready_to_recv.notified().await });
+
                 tx.blocking_send(Ok(msg)).ok();
 
-                // We want to be sure we only remove the message
-                // if it has been read for processing
                 session.store(fetch.message.to_string(), "+FLAGS (\\Deleted)")?;
                 session.expunge()?;
             }
@@ -95,6 +115,7 @@ fn read_message(fetch: &Fetch<'_>) -> Result<Message, ()> {
 pub struct ImapConnection {
     rx: mpsc::Receiver<imap::Result<Message>>,
     tcp: TcpStream,
+    ready_to_recv: Arc<Notify>,
 }
 
 #[async_trait]
@@ -102,6 +123,7 @@ impl Receiver for ImapConnection {
     type Error = imap::Error;
 
     async fn recv(&mut self) -> imap::Result<Message> {
+        self.ready_to_recv.notify_one();
         match self.rx.recv().await {
             Some(message) => message,
             None => unreachable!(),

@@ -9,12 +9,12 @@ giving a corresponding email response.
 [link](https://support.google.com/accounts/answer/185833)
 
 ## TODO
-- Integration test: green mail
-- Only read imap message when call recv (?)
 - Messages with body
 - Messages with attachements
+- Remove all unwraps from transports
 - Logs
 - UML
+- Testing
 
 ## API ideas
 ```rust
