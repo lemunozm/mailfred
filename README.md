@@ -9,8 +9,6 @@ giving a corresponding email response.
 [link](https://support.google.com/accounts/answer/185833)
 
 ## TODO
-- Messages with body
-- Messages with attachements
 - Remove all unwraps from transports
 - Logs
 - UML

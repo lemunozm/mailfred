@@ -16,8 +16,8 @@ tokio = { version = "1", features = ["rt", "macros", "sync", "time", "io-std", "
 async-trait = "0.1"
 
 # smtp
-mail-send = "0.3"
-mail-builder = "0.2"
+mail-send = "0.4"
+mail-builder = "0.3"
 tokio-rustls = "0.24"
 
 # imap

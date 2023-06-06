@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use mail_builder::MessageBuilder as EmailBuilder;
+use mail_builder::{mime::MimePart, MessageBuilder as EmailBuilder};
 use mail_send::{self as smtp, SmtpClient, SmtpClientBuilder};
 use tokio::net::TcpStream;
 use tokio_rustls::client::TlsStream;
 
-use crate::message::{Message, Sender, Transport};
+use crate::message::{Kind, Message, Sender, Transport};
 
 pub struct Smtp {
     pub domain: String,
@@ -43,10 +43,24 @@ impl Sender for SmtpConnection {
     type Error = smtp::Error;
 
     async fn send(&mut self, msg: &Message) -> smtp::Result<()> {
+        let parts = msg
+            .body
+            .iter()
+            .cloned()
+            .map(|part| match part.kind {
+                Kind::Text => MimePart::new("text/plain", part.content),
+                Kind::Html => MimePart::new("text/html", part.content),
+                Kind::Attachment(name) => {
+                    MimePart::new("application/octet-stream", part.content).attachment(name)
+                }
+            })
+            .collect::<Vec<MimePart>>();
+
         let email = EmailBuilder::new()
             .from(self.origin.as_str())
             .to(msg.address.as_str())
-            .subject(msg.subject.clone());
+            .subject(msg.subject.clone())
+            .body(MimePart::new("multipart/mixed", parts));
 
         self.client.send(email).await.unwrap();
 

@@ -8,14 +8,14 @@ use imap::{
     types::{Fetch, UnsolicitedResponse},
     ClientBuilder, Session,
 };
-use mail_parser::{HeaderValue, Message as EmailParser};
+use mail_parser::{HeaderValue, Message as EmailParser, MimeHeaders};
 use native_tls::{TlsConnector, TlsStream};
 use tokio::{
     runtime::Handle,
     sync::{mpsc, Notify},
 };
 
-use crate::message::{Message, Receiver, Transport};
+use crate::message::{Kind, Message, Part, Receiver, Transport};
 
 #[derive(Clone)]
 pub struct Imap {
@@ -77,7 +77,7 @@ fn listener(
         let fetches = session.fetch("1:*", "RFC822")?;
 
         for fetch in fetches.iter() {
-            if let Ok(msg) = read_message(fetch) {
+            if let Ok(msg) = read_email(fetch) {
                 // We want to be sure we only remove the message
                 // if it will be processed.
                 let ready_to_recv = ready_to_recv.clone();
@@ -97,18 +97,42 @@ fn listener(
     }
 }
 
-fn read_message(fetch: &Fetch<'_>) -> Result<Message, ()> {
+fn read_email(fetch: &Fetch<'_>) -> Result<Message, ()> {
     let email = EmailParser::parse(fetch.body().unwrap()).unwrap();
+
+    let subject = email.subject().unwrap_or_default().into();
 
     let from = match email.from() {
         HeaderValue::Address(addr) => addr.address.clone().unwrap().into(),
         _ => return Err(()),
     };
 
+    let mut body = Vec::default();
+
+    for part in email.text_bodies() {
+        body.push(Part {
+            kind: if part.is_text_html() {
+                Kind::Html
+            } else {
+                Kind::Text
+            },
+            content: part.contents().into(),
+        });
+    }
+
+    for part in email.attachments() {
+        if !part.is_empty() {
+            body.push(Part {
+                kind: Kind::Attachment(part.attachment_name().unwrap_or_default().into()),
+                content: part.contents().into(),
+            });
+        }
+    }
+
     Ok(Message {
         address: from,
-        subject: email.subject().unwrap_or("").into(),
-        body: Vec::default(),
+        subject,
+        body,
     })
 }
 

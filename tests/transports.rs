@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use mailfred::{
-    message::{Message, Receiver, Sender, Transport},
+    message::{Kind, Message, Part, Receiver, Sender, Transport},
     transports::{imap::Imap, smtp::Smtp},
 };
 
@@ -57,8 +57,58 @@ fn messages() -> Vec<Message> {
         },
         Message {
             address: env::user(),
-            subject: "hello".into(),
+            subject: "Subject message".into(),
             body: Vec::default(),
+        },
+        Message {
+            address: env::user(),
+            subject: "Text message".into(),
+            body: vec![Part {
+                kind: Kind::Text,
+                content: "asd".as_bytes().into(),
+            }],
+        },
+        Message {
+            address: env::user(),
+            subject: "Html message".into(),
+            body: vec![Part {
+                kind: Kind::Html,
+                content: "<h1>abc</h1>".as_bytes().into(),
+            }],
+        },
+        Message {
+            address: env::user(),
+            subject: "Attachment message".into(),
+            body: vec![Part {
+                kind: Kind::Attachment("file.txt".into()),
+                content: "file content".as_bytes().into(),
+            }],
+        },
+        Message {
+            address: env::user(),
+            subject: "Complex message".into(),
+            body: vec![
+                Part {
+                    kind: Kind::Text,
+                    content: "asd 1".as_bytes().into(),
+                },
+                Part {
+                    kind: Kind::Text,
+                    content: "asd 2".as_bytes().into(),
+                },
+                Part {
+                    kind: Kind::Html,
+                    content: "<h1>abc</h1>".as_bytes().into(),
+                },
+                Part {
+                    kind: Kind::Attachment("file1.txt".into()),
+                    content: "file content 1".as_bytes().into(),
+                },
+                Part {
+                    kind: Kind::Attachment("file2.txt".into()),
+                    content: "file content 2".as_bytes().into(),
+                },
+            ],
         },
     ]
 }
@@ -81,7 +131,7 @@ async fn roundtrip_sync() {
     let messages = messages();
     for i in 0..messages.len() {
         let msg = imap.recv().await.unwrap();
-        assert_eq!(messages[i], msg, "Message {i}");
+        assert_eq!(msg, messages[i], "Message {i}");
     }
 }
 
@@ -105,6 +155,29 @@ async fn roundtrip_async() {
     let messages = messages();
     for i in 0..messages.len() {
         let msg = imap.recv().await.unwrap();
-        assert_eq!(messages[i], msg, "Message {i}");
+        assert_eq!(msg, messages[i], "Message {i}");
     }
+}
+
+#[ignore] // Used only for manual testing
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::serial]
+async fn send() {
+    let msg = Message {
+        address: env::user(),
+        subject: "Hi".into(),
+        body: vec![
+            Part {
+                kind: Kind::Text,
+                content: "asdasd".as_bytes().into(),
+            },
+            Part {
+                kind: Kind::Attachment("file.txt".into()),
+                content: "file content".as_bytes().into(),
+            },
+        ],
+    };
+
+    let mut smtp = smtp_transport().connect().await.unwrap();
+    smtp.send(&msg).await.unwrap();
 }

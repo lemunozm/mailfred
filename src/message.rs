@@ -3,8 +3,15 @@ use std::error::Error;
 use async_trait::async_trait;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Kind {
+    Text,
+    Html,
+    Attachment(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Part {
-    pub headers: Vec<String>,
+    pub kind: Kind,
     pub content: Vec<u8>,
 }
 
