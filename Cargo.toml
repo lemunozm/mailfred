@@ -46,3 +46,14 @@ chrono = { version = "0.4", optional = true }
 [dev-dependencies]
 serial_test = "2.0"
 
+[[test]]
+name = "integration_transports"
+required-features = ["imap", "smtp"]
+
+[[example]]
+name = "basic"
+required-features = ["imap", "smtp", "logger"]
+
+[[example]]
+name = "gmail"
+required-features = ["imap", "smtp", "logger"]

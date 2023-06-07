@@ -1,14 +1,23 @@
+#[cfg(feature = "imap")]
 pub mod imap;
+
+#[cfg(feature = "smtp")]
 pub mod smtp;
 
-pub use self::{imap::Imap, smtp::Smtp};
+#[cfg(feature = "imap")]
+pub use self::imap::Imap;
+#[cfg(feature = "smtp")]
+pub use self::smtp::Smtp;
+#[cfg(all(feature = "imap", feature = "smtp"))]
 use crate::connector::Connector;
 
+#[cfg(all(feature = "imap", feature = "smtp"))]
 pub struct Gmail {
     pub username: String,
     pub password: String,
 }
 
+#[cfg(all(feature = "imap", feature = "smtp"))]
 impl Connector for Gmail {
     type Inbound = Imap;
     type Outbound = Smtp;
