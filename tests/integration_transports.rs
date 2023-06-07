@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use mailfred::{
     message::{Kind, Message, Part, Receiver, Sender, Transport},
-    transports::{imap::Imap, smtp::Smtp},
+    transports::{Imap, Smtp},
 };
 
 mod env {
@@ -157,6 +157,21 @@ async fn roundtrip_async() {
         let msg = imap.recv().await.unwrap();
         assert_eq!(msg, messages[i], "Message {i}");
     }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::serial]
+async fn run_and_stop() {
+    let connector = (imap_transport(), smtp_transport());
+    let handle = tokio::spawn(async move {
+        mailfred::serve(connector, |_| async { vec![] })
+            .await
+            .unwrap();
+    });
+
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    handle.abort();
 }
 
 #[ignore] // Used only for manual testing

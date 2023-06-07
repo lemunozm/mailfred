@@ -1,11 +1,11 @@
 pub mod imap;
 pub mod smtp;
 
-use self::{imap::Imap, smtp::Smtp};
+pub use self::{imap::Imap, smtp::Smtp};
 use crate::connector::Connector;
 
 pub struct Gmail {
-    pub user: String,
+    pub username: String,
     pub password: String,
 }
 
@@ -17,14 +17,14 @@ impl Connector for Gmail {
         let imap = Imap {
             domain: "imap.gmail.com".into(),
             port: 993,
-            user: format!("{}@gmail.com", self.user),
+            user: format!("{}@gmail.com", self.username),
             password: self.password.clone(),
         };
 
         let smtp = Smtp {
             domain: "smtp.gmail.com".into(),
             port: 587,
-            user: format!("{}@gmail.com", self.user),
+            user: format!("{}@gmail.com", self.username),
             password: self.password,
         };
 

@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, future::Future};
 
 use async_trait::async_trait;
 
@@ -46,5 +46,16 @@ pub trait Receiver: Sized + Send {
 
 #[async_trait]
 pub trait Processor: Send + Clone + 'static {
-    async fn process(&mut self, msg: &Message) -> Vec<Part>;
+    async fn process(self, msg: Message) -> Vec<Part>;
+}
+
+#[async_trait]
+impl<F, Fut> Processor for F
+where
+    F: FnOnce(Message) -> Fut + Clone + Send + 'static,
+    Fut: Future<Output = Vec<Part>> + Send,
+{
+    async fn process(self, msg: Message) -> Vec<Part> {
+        (self)(msg).await
+    }
 }
