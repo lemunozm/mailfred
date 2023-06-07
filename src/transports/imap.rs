@@ -5,7 +5,7 @@ use std::{
 
 use async_trait::async_trait;
 use imap::{
-    types::{Fetch, UnsolicitedResponse},
+    types::{Flag, UnsolicitedResponse},
     ClientBuilder, Session,
 };
 use mail_parser::{HeaderValue, Message as EmailParser, MimeHeaders};
@@ -77,7 +77,11 @@ fn listener(
         let fetches = session.fetch("1:*", "RFC822")?;
 
         for fetch in fetches.iter() {
-            if let Ok(msg) = read_email(fetch) {
+            if fetch.flags().contains(&Flag::Deleted) {
+                continue;
+            }
+
+            if let Ok(msg) = read_email(fetch.body().unwrap()) {
                 // We want to be sure we only remove the message
                 // if it will be processed.
                 let ready_to_recv = ready_to_recv.clone();
@@ -86,19 +90,25 @@ fn listener(
                 tx.blocking_send(Ok(msg)).ok();
 
                 session.store(fetch.message.to_string(), "+FLAGS (\\Deleted)")?;
-                session.expunge()?;
             }
         }
 
-        session.idle().wait_while(|response| match response {
-            UnsolicitedResponse::Exists(_) => false,
-            _ => true,
-        })?;
+        if fetches.len() > 0 {
+            session.expunge()?;
+        } else {
+            // If a message is sent here, before initialize the IDLE,
+            // the server could not notify it.
+            // See issue: https://github.com/jonhoo/rust-imap/issues/263
+            session.idle().wait_while(|response| match response {
+                UnsolicitedResponse::Exists(_) => false,
+                _ => true,
+            })?;
+        }
     }
 }
 
-fn read_email(fetch: &Fetch<'_>) -> Result<Message, ()> {
-    let email = EmailParser::parse(fetch.body().unwrap()).unwrap();
+fn read_email(email_raw: &[u8]) -> Result<Message, ()> {
+    let email = EmailParser::parse(email_raw).unwrap();
 
     let subject = email.subject().unwrap_or_default().into();
 
