@@ -11,19 +11,37 @@ repository = "https://github.com/lemunozm/mailfred"
 keywords = ["imap", "smtp", "server", "email", "service"]
 categories = ["asynchronous", "email", "web-programming"]
 
+[features]
+default = ["smtp", "imap", "logger"]
+smtp = ["dep:mail-send", "dep:mail-builder", "dep:tokio-rustls"]
+imap = ["dep:imap", "dep:mail-parser", "dep:native-tls"]
+logger = ["dep:fern", "dep:colored", "dep:chrono"]
+
 [dependencies]
-tokio = { version = "1", features = ["rt", "macros", "sync", "time", "io-std", "io-util", "rt-multi-thread", "signal"] }
+tokio = { version = "1", features = [
+  "rt",
+  "macros",
+  "sync",
+  "time",
+  "rt-multi-thread",
+] }
 async-trait = "0.1"
+log = "0.4"
 
 # smtp
-mail-send = "0.4"
-mail-builder = "0.3"
-tokio-rustls = "0.24"
+mail-send = { version = "0.4", optional = true }
+mail-builder = { version = "0.3", optional = true }
+tokio-rustls = { version = "0.24", optional = true }
 
 # imap
-imap = "3.0.0-alpha.10"
-mail-parser = "0.8"
-native-tls = "0.2"
+imap = { version = "3.0.0-alpha.10", optional = true }
+mail-parser = { version = "0.8", optional = true }
+native-tls = { version = "0.2", optional = true }
+
+# logger
+fern = { version = "0.6", features = ["colored"], optional = true }
+colored = { version = "2.0", optional = true }
+chrono = { version = "0.4", optional = true }
 
 [dev-dependencies]
 serial_test = "2.0"

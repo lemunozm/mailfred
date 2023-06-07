@@ -12,6 +12,7 @@ giving a corresponding email response.
 - Logs
 - UML
 - Testing
+- Documentation
 
 ## API ideas
 ```rust
