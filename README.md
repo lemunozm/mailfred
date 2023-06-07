@@ -9,7 +9,6 @@ giving a corresponding email response.
 [link](https://support.google.com/accounts/answer/185833)
 
 ## TODO
-- Remove all unwraps from transports
 - Logs
 - UML
 - Testing

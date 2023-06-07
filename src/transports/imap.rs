@@ -44,7 +44,7 @@ impl Transport for Imap {
                 .map_err(|(e, _)| e)?;
 
             session.select("INBOX")?;
-            Ok((session, tcp_stream.expect("an stream if connected")))
+            Ok((session, tcp_stream.expect("a session must have a stream")))
         })?;
 
         let ready_to_recv = Arc::new(Notify::new());
@@ -54,7 +54,7 @@ impl Transport for Imap {
             let ready_to_recv = ready_to_recv.clone();
             move || {
                 let err = listener(session, ready_to_recv.clone(), tx.clone())
-                    .expect_err("listener only ends at error");
+                    .expect_err("listener only ends with error");
 
                 tx.blocking_send(Err(err)).ok();
             }
@@ -81,15 +81,17 @@ fn listener(
                 continue;
             }
 
-            if let Ok(msg) = read_email(fetch.body().unwrap()) {
-                // We want to be sure we only remove the message
-                // if it will be processed.
-                let ready_to_recv = ready_to_recv.clone();
-                Handle::current().block_on(async move { ready_to_recv.notified().await });
+            if let Some(body) = fetch.body() {
+                if let Some(msg) = read_email(body) {
+                    // We want to be sure we only remove the message
+                    // if it will be processed.
+                    let ready_to_recv = ready_to_recv.clone();
+                    Handle::current().block_on(async move { ready_to_recv.notified().await });
 
-                tx.blocking_send(Ok(msg)).ok();
+                    tx.blocking_send(Ok(msg)).ok();
 
-                session.store(fetch.message.to_string(), "+FLAGS (\\Deleted)")?;
+                    session.store(fetch.message.to_string(), "+FLAGS (\\Deleted)")?;
+                }
             }
         }
 
@@ -107,14 +109,14 @@ fn listener(
     }
 }
 
-fn read_email(email_raw: &[u8]) -> Result<Message, ()> {
-    let email = EmailParser::parse(email_raw).unwrap();
+fn read_email(email_raw: &[u8]) -> Option<Message> {
+    let email = EmailParser::parse(email_raw)?;
 
     let subject = email.subject().unwrap_or_default().into();
 
     let from = match email.from() {
-        HeaderValue::Address(addr) => addr.address.clone().unwrap().into(),
-        _ => return Err(()),
+        HeaderValue::Address(addr) => addr.address.clone()?.into(),
+        _ => None?,
     };
 
     let mut body = Vec::default();
@@ -139,7 +141,7 @@ fn read_email(email_raw: &[u8]) -> Result<Message, ()> {
         }
     }
 
-    Ok(Message {
+    Some(Message {
         address: from,
         subject,
         body,

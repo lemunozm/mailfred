@@ -23,8 +23,7 @@ impl Transport for Smtp {
             .implicit_tls(false)
             .credentials((self.user.as_ref(), self.password.as_ref()))
             .connect()
-            .await
-            .unwrap();
+            .await?;
 
         Ok(SmtpConnection {
             client,
@@ -62,8 +61,6 @@ impl Sender for SmtpConnection {
             .subject(msg.subject.clone())
             .body(MimePart::new("multipart/mixed", parts));
 
-        self.client.send(email).await.unwrap();
-
-        Ok(())
+        self.client.send(email).await
     }
 }
