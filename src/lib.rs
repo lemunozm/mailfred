@@ -1,16 +1,16 @@
+mod connection_handler;
 pub mod connector;
 #[cfg(feature = "logger")]
 pub mod logger;
 pub mod message;
 pub mod transports;
 
-use std::{error::Error, sync::Arc, time::Duration};
+use std::{error::Error, sync::Arc};
 
-use connector::{Connector, Inbound, Outbound};
-use message::{Message, Processor, Receiver, Sender, Transport};
+use connection_handler::ConnectionHandler;
+use connector::{Connector, Inbound};
+use message::{Message, Processor};
 use tokio::sync::Mutex;
-
-const MAX_DELAY_CONNECTION_RETRY: Duration = Duration::from_secs(256);
 
 pub async fn serve(
     connector: impl Connector,
@@ -18,8 +18,8 @@ pub async fn serve(
 ) -> Result<(), Box<dyn Error>> {
     let (inbound, outbound) = connector.split();
 
-    let mut receiver = ConnectionHandler::connect(inbound).await?;
-    let sender = ConnectionHandler::connect(outbound).await?;
+    let mut receiver = ConnectionHandler::connect(inbound, "main").await?;
+    let sender = ConnectionHandler::connect(outbound, "main").await?;
 
     let shared_sender = Arc::new(Mutex::new(sender));
 
@@ -50,81 +50,18 @@ pub async fn serve(
     }
 }
 
-pub struct ConnectionHandler<T: Transport> {
-    transport: T,
-    conn: T::Connection,
-}
+pub async fn init_consumer<T: Inbound>(
+    imap: T,
+    log_suffix: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let log_suffix = format!("{}-consumer", log_suffix);
+    let mut consumer = ConnectionHandler::connect(imap, &log_suffix).await?;
 
-impl<T: Transport> ConnectionHandler<T> {
-    pub async fn connect(transport: T) -> Result<Self, T::Error> {
-        Ok(Self {
-            conn: match transport.connect().await {
-                Ok(conn) => {
-                    log::info!("{}: connected!", T::NAME);
-                    conn
-                }
-                Err(err) => {
-                    log::error!("{}: can not connect", T::NAME);
-                    Err(err)?
-                }
-            },
-            transport,
-        })
-    }
-
-    async fn force_connect(&mut self) {
-        let mut waiting = Duration::from_secs(1); //secs
+    tokio::spawn(async move {
         loop {
-            log::trace!("{}: trying to reconnect...", T::NAME);
-            match self.transport.connect().await {
-                Ok(conn) => {
-                    self.conn = conn;
-                    log::info!("{}: reconnected!", T::NAME);
-                }
-                Err(_) => {
-                    log::warn!(
-                        "{}: reconnection failed, retry in {}",
-                        T::NAME,
-                        waiting.as_secs()
-                    );
-                    tokio::time::sleep(waiting).await;
-                    waiting = (waiting * 2).max(MAX_DELAY_CONNECTION_RETRY);
-                }
-            }
+            let _ = consumer.recv().await;
         }
-    }
-}
+    });
 
-impl<T: Inbound> ConnectionHandler<T> {
-    pub async fn recv(&mut self) -> Message {
-        loop {
-            match self.conn.recv().await {
-                Ok(msg) => {
-                    log::trace!("{}: message received from '{}'", T::NAME, msg.address);
-                    break msg;
-                }
-                Err(_) => {
-                    log::warn!("{}: message could not be received", T::NAME);
-                    self.force_connect().await
-                }
-            }
-        }
-    }
-}
-
-impl<T: Outbound> ConnectionHandler<T> {
-    pub async fn send(&mut self, msg: &Message) {
-        loop {
-            match self.conn.send(&msg).await {
-                Ok(_) => {
-                    log::trace!("{}: message sent to {}", T::NAME, msg.address);
-                    break;
-                }
-                Err(_) => {
-                    log::warn!("{}: message could not be sent to {}", T::NAME, msg.address);
-                    self.force_connect().await
-                }
-            }
-        }
-    }
+    Ok(())
 }

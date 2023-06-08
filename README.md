@@ -9,10 +9,10 @@ giving a corresponding email response.
 [link](https://support.google.com/accounts/answer/185833)
 
 ## TODO
-- Logs
 - UML
 - Testing
 - Documentation
+- Return nothing from process
 
 ## API ideas
 ```rust

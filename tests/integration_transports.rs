@@ -23,6 +23,7 @@ fn imap_transport() -> Imap {
         port: 993,
         user: env::user(),
         password: env::password(),
+        folder: "inbox".into(),
     }
 }
 
@@ -33,19 +34,6 @@ fn smtp_transport() -> Smtp {
         user: env::user(),
         password: env::password(),
     }
-}
-
-fn clean_inbox() -> imap::Result<()> {
-    let client = imap::ClientBuilder::new("imap.gmail.com", 993).native_tls()?;
-    let mut session = client
-        .login(env::user(), env::password())
-        .map_err(|e| e.0)?;
-
-    session.select("INBOX")?;
-    session.store("1:*", "+FLAGS (\\Deleted)")?;
-    session.expunge()?;
-
-    Ok(())
 }
 
 fn messages() -> Vec<Message> {
@@ -116,7 +104,7 @@ fn messages() -> Vec<Message> {
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::serial]
 async fn roundtrip_sync() {
-    clean_inbox().unwrap();
+    imap_transport().clear_folder("inbox").unwrap();
 
     let mut smtp = smtp_transport().connect().await.unwrap();
     for msg in messages() {
@@ -138,7 +126,7 @@ async fn roundtrip_sync() {
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::serial]
 async fn roundtrip_async() {
-    clean_inbox().unwrap();
+    imap_transport().clear_folder("inbox").unwrap();
 
     let mut smtp = smtp_transport().connect().await.unwrap();
     let mut imap = imap_transport().connect().await.unwrap();

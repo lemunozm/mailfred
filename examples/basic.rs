@@ -17,6 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         port: 993,
         user: "user@gmail.com".into(),
         password: "1234".into(),
+        folder: "inbox".into(),
     };
 
     let smtp = Smtp {

@@ -57,3 +57,7 @@ required-features = ["imap", "smtp", "logger"]
 [[example]]
 name = "gmail"
 required-features = ["imap", "smtp", "logger"]
+
+[[example]]
+name = "clean_sent_folder"
+required-features = ["imap", "smtp", "logger"]

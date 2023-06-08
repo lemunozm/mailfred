@@ -23,6 +23,7 @@ pub struct Imap {
     pub port: u16,
     pub user: String,
     pub password: String,
+    pub folder: String,
 }
 
 #[async_trait]
@@ -45,7 +46,7 @@ impl Transport for Imap {
                 .login(&self.user, &self.password)
                 .map_err(|(e, _)| e)?;
 
-            session.select("INBOX")?;
+            session.select(&self.folder)?;
             Ok((session, tcp_stream.expect("a session must have a stream")))
         })?;
 
@@ -148,6 +149,19 @@ fn read_email(email_raw: &[u8]) -> Option<Message> {
         subject,
         body,
     })
+}
+
+impl Imap {
+    pub fn clear_folder(&self, folder: &str) -> imap::Result<()> {
+        let client = imap::ClientBuilder::new(&self.domain, self.port).native_tls()?;
+        let mut session = client.login(&self.user, &self.password).map_err(|e| e.0)?;
+
+        session.select(folder)?;
+        session.store("1:*", "+FLAGS (\\Deleted)")?;
+        session.expunge()?;
+
+        Ok(())
+    }
 }
 
 pub struct ImapConnection {

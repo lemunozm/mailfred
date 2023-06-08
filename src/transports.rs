@@ -29,6 +29,7 @@ pub mod gmail {
                 port: 993,
                 user: format!("{}@gmail.com", self.username),
                 password: self.password.clone(),
+                folder: "inbox".into(),
             };
 
             let smtp = Smtp {
