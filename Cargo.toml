@@ -12,7 +12,9 @@ keywords = ["imap", "smtp", "server", "email", "service"]
 categories = ["asynchronous", "email", "web-programming"]
 
 [features]
-default = ["smtp", "imap", "logger"]
+default = ["smtp", "imap"]
+full = ["smtp", "imap", "logger"]
+
 smtp = ["dep:mail-send", "dep:mail-builder", "dep:tokio-rustls"]
 imap = ["dep:imap", "dep:mail-parser", "dep:native-tls"]
 logger = ["dep:fern", "dep:colored", "dep:chrono"]
