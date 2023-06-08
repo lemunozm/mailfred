@@ -3,19 +3,18 @@ pub mod connector;
 #[cfg(feature = "logger")]
 pub mod logger;
 pub mod message;
+pub mod service;
 pub mod transports;
 
 use std::{error::Error, sync::Arc};
 
 use connection_handler::ConnectionHandler;
 use connector::{Connector, Inbound};
-use message::{Message, Processor};
+use message::Message;
+use service::Service;
 use tokio::sync::Mutex;
 
-pub async fn serve(
-    connector: impl Connector,
-    processor: impl Processor,
-) -> Result<(), Box<dyn Error>> {
+pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(), Box<dyn Error>> {
     let (inbound, outbound) = connector.split();
 
     let mut receiver = ConnectionHandler::connect(inbound, "main").await?;
@@ -26,7 +25,7 @@ pub async fn serve(
     loop {
         let input = receiver.recv().await;
         let shared_sender = shared_sender.clone();
-        let processor = processor.clone();
+        let service = service.clone();
 
         tokio::spawn(async move {
             let address = input.address.clone();
@@ -37,7 +36,7 @@ pub async fn serve(
             let output = Message {
                 address,
                 header,
-                body: processor.process(input).await,
+                body: service.process(input).await,
             };
 
             let mut sender = shared_sender.lock().await;
