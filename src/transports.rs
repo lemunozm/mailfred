@@ -8,35 +8,40 @@ pub mod smtp;
 pub use self::imap::Imap;
 #[cfg(feature = "smtp")]
 pub use self::smtp::Smtp;
-#[cfg(all(feature = "imap", feature = "smtp"))]
-use crate::connector::Connector;
 
 #[cfg(all(feature = "imap", feature = "smtp"))]
-pub struct Gmail {
-    pub username: String,
-    pub password: String,
-}
+pub mod gmail {
+    use super::{Imap, Smtp};
+    use crate::connector::Connector;
 
-#[cfg(all(feature = "imap", feature = "smtp"))]
-impl Connector for Gmail {
-    type Inbound = Imap;
-    type Outbound = Smtp;
+    pub struct Gmail {
+        pub username: String,
+        pub password: String,
+    }
 
-    fn split(self) -> (Self::Inbound, Self::Outbound) {
-        let imap = Imap {
-            domain: "imap.gmail.com".into(),
-            port: 993,
-            user: format!("{}@gmail.com", self.username),
-            password: self.password.clone(),
-        };
+    impl Connector for Gmail {
+        type Inbound = Imap;
+        type Outbound = Smtp;
 
-        let smtp = Smtp {
-            domain: "smtp.gmail.com".into(),
-            port: 587,
-            user: format!("{}@gmail.com", self.username),
-            password: self.password,
-        };
+        fn split(self) -> (Self::Inbound, Self::Outbound) {
+            let imap = Imap {
+                domain: "imap.gmail.com".into(),
+                port: 993,
+                user: format!("{}@gmail.com", self.username),
+                password: self.password.clone(),
+            };
 
-        (imap, smtp)
+            let smtp = Smtp {
+                domain: "smtp.gmail.com".into(),
+                port: 587,
+                user: format!("{}@gmail.com", self.username),
+                password: self.password,
+            };
+
+            (imap, smtp)
+        }
     }
 }
+
+#[cfg(all(feature = "imap", feature = "smtp"))]
+pub use gmail::Gmail;

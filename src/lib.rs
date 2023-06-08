@@ -1,4 +1,6 @@
 pub mod connector;
+#[cfg(feature = "logger")]
+pub mod logger;
 pub mod message;
 pub mod transports;
 
@@ -55,14 +57,19 @@ pub struct ConnectionHandler<T: Transport> {
 
 impl<T: Transport> ConnectionHandler<T> {
     pub async fn connect(transport: T) -> Result<Self, T::Error> {
-        let handler = Self {
-            conn: transport.connect().await?,
+        Ok(Self {
+            conn: match transport.connect().await {
+                Ok(conn) => {
+                    log::info!("{}: connected!", T::NAME);
+                    conn
+                }
+                Err(err) => {
+                    log::error!("{}: can not connect", T::NAME);
+                    Err(err)?
+                }
+            },
             transport,
-        };
-
-        log::info!("{}: connected!", T::NAME);
-
-        Ok(handler)
+        })
     }
 
     async fn force_connect(&mut self) {

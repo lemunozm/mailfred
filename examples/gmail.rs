@@ -1,5 +1,5 @@
 use mailfred::{
-    self,
+    self, logger,
     message::{Message, Part},
     transports::Gmail,
 };
@@ -10,7 +10,7 @@ async fn echo(msg: Message) -> Vec<Part> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // log here
+    logger::configure(log::LevelFilter::Trace);
 
     let gmail = Gmail {
         username: "user".into(),
