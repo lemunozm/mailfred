@@ -40,17 +40,17 @@ fn messages() -> Vec<Message> {
     vec![
         Message {
             address: env::user(),
-            subject: "".into(),
+            header: "".into(),
             body: Vec::default(),
         },
         Message {
             address: env::user(),
-            subject: "Subject message".into(),
+            header: "Empty message".into(),
             body: Vec::default(),
         },
         Message {
             address: env::user(),
-            subject: "Text message".into(),
+            header: "Text message".into(),
             body: vec![Part {
                 kind: Kind::Text,
                 content: "asd".as_bytes().into(),
@@ -58,7 +58,7 @@ fn messages() -> Vec<Message> {
         },
         Message {
             address: env::user(),
-            subject: "Html message".into(),
+            header: "Html message".into(),
             body: vec![Part {
                 kind: Kind::Html,
                 content: "<h1>abc</h1>".as_bytes().into(),
@@ -66,7 +66,7 @@ fn messages() -> Vec<Message> {
         },
         Message {
             address: env::user(),
-            subject: "Attachment message".into(),
+            header: "Attachment message".into(),
             body: vec![Part {
                 kind: Kind::Attachment("file.txt".into()),
                 content: "file content".as_bytes().into(),
@@ -74,7 +74,7 @@ fn messages() -> Vec<Message> {
         },
         Message {
             address: env::user(),
-            subject: "Complex message".into(),
+            header: "Complex message".into(),
             body: vec![
                 Part {
                     kind: Kind::Text,
@@ -168,7 +168,7 @@ async fn run_and_stop() {
 async fn send() {
     let msg = Message {
         address: env::user(),
-        subject: "Hi".into(),
+        header: "Hi".into(),
         body: vec![
             Part {
                 kind: Kind::Text,

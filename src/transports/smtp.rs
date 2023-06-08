@@ -60,7 +60,7 @@ impl Sender for SmtpConnection {
         let email = EmailBuilder::new()
             .from(self.origin.as_str())
             .to(msg.address.as_str())
-            .subject(msg.subject.clone())
+            .subject(msg.header.as_str())
             .body(MimePart::new("multipart/mixed", parts));
 
         self.client.send(email).await

@@ -146,7 +146,7 @@ fn read_email(email_raw: &[u8]) -> Option<Message> {
 
     Some(Message {
         address: from,
-        subject,
+        header: subject,
         body,
     })
 }

@@ -18,7 +18,7 @@ pub struct Part {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Message {
     pub address: String,
-    pub subject: String,
+    pub header: String,
     pub body: Vec<Part>,
 }
 

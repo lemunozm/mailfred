@@ -30,17 +30,13 @@ pub async fn serve(
 
         tokio::spawn(async move {
             let address = input.address.clone();
-            let subject = input.subject.clone();
+            let header = input.header.clone();
 
-            log::info!(
-                "Process message for '{}' with subject '{}'",
-                address,
-                subject
-            );
+            log::info!("Process message for '{}' with header '{}'", address, header);
 
             let output = Message {
                 address,
-                subject,
+                header,
                 body: processor.process(input).await,
             };
 
