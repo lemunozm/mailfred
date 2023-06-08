@@ -6,8 +6,8 @@ use mailfred::{
     transports::{Gmail, Imap},
 };
 
-async fn echo(msg: Message) -> Vec<Part> {
-    msg.body.clone()
+async fn echo(msg: Message) -> Option<Vec<Part>> {
+    Some(msg.body.clone())
 }
 
 #[tokio::main]

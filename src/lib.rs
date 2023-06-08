@@ -36,11 +36,13 @@ pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(
             let output = Message {
                 address,
                 header,
-                body: service.process(input).await,
+                body: service.process(input).await?,
             };
 
             let mut sender = shared_sender.lock().await;
-            sender.send(&output).await
+            sender.send(&output).await;
+
+            Some(())
         });
     }
 }

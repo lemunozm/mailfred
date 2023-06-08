@@ -152,7 +152,7 @@ async fn roundtrip_async() {
 async fn run_and_stop() {
     let connector = (imap_transport(), smtp_transport());
     let handle = tokio::spawn(async move {
-        mailfred::serve(connector, |_| async { vec![] })
+        mailfred::serve(connector, |_| async { Some(vec![]) })
             .await
             .unwrap();
     });
