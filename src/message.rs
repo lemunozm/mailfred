@@ -24,6 +24,8 @@ pub struct Message {
 
 #[async_trait]
 pub trait Transport: Sync + Send {
+    const NAME: &'static str;
+
     type Connection: Send;
     type Error: Send + Error + 'static;
 

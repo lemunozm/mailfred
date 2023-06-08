@@ -27,6 +27,8 @@ pub struct Imap {
 
 #[async_trait]
 impl Transport for Imap {
+    const NAME: &'static str = "imap";
+
     type Connection = ImapConnection;
     type Error = imap::Error;
 

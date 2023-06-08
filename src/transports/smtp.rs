@@ -15,6 +15,8 @@ pub struct Smtp {
 
 #[async_trait]
 impl Transport for Smtp {
+    const NAME: &'static str = "smtp";
+
     type Connection = SmtpConnection;
     type Error = smtp::Error;
 
