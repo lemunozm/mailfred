@@ -19,6 +19,9 @@ smtp = ["dep:mail-send", "dep:mail-builder", "dep:tokio-rustls"]
 imap = ["dep:imap", "dep:mail-parser", "dep:native-tls"]
 logger = ["dep:fern", "dep:colored", "dep:chrono"]
 
+[package.metadata.cargo-all-features]
+denylist = ["full"] # it's just an alias, we do not want to permute over it
+
 [dependencies]
 tokio = { version = "1", features = [
   "rt",

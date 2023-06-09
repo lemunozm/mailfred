@@ -2,7 +2,7 @@ use std::future::Future;
 
 use async_trait::async_trait;
 
-use crate::message::{Message, Part};
+use crate::transport::{Message, Part};
 
 #[async_trait]
 pub trait Service: Send + Clone + 'static {

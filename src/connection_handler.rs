@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use crate::{
-    connector::{Inbound, Outbound},
-    message::{Message, Receiver, Sender, Transport},
-};
+use crate::transport::{Inbound, Message, Outbound, Receiver, Sender, Transport};
 
 const MAX_DELAY_CONNECTION_RETRY: Duration = Duration::from_secs(256);
 

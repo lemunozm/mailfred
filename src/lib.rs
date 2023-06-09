@@ -1,18 +1,16 @@
 mod connection_handler;
-pub mod connector;
 #[cfg(feature = "logger")]
 pub mod logger;
-pub mod message;
 pub mod service;
+pub mod transport;
 pub mod transports;
 
 use std::{error::Error, sync::Arc};
 
 use connection_handler::ConnectionHandler;
-use connector::{Connector, Inbound};
-use message::Message;
 use service::Service;
 use tokio::sync::Mutex;
+use transport::{Connector, Inbound, Message};
 
 pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(), Box<dyn Error>> {
     let (inbound, outbound) = connector.split();

@@ -12,7 +12,7 @@ pub use self::smtp::Smtp;
 #[cfg(all(feature = "imap", feature = "smtp"))]
 pub mod gmail {
     use super::{Imap, Smtp};
-    use crate::connector::Connector;
+    use crate::transport::Connector;
 
     pub struct Gmail {
         pub username: String,

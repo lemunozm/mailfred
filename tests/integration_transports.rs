@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use mailfred::{
-    message::{Kind, Message, Part, Receiver, Sender, Transport},
+    transport::{Kind, Message, Part, Receiver, Sender, Transport},
     transports::{Imap, Smtp},
 };
 

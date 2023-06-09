@@ -4,7 +4,7 @@ use mail_send::{self as smtp, SmtpClient, SmtpClientBuilder};
 use tokio::net::TcpStream;
 use tokio_rustls::client::TlsStream;
 
-use crate::message::{Kind, Message, Sender, Transport};
+use crate::transport::{Kind, Message, Sender, Transport};
 
 pub struct Smtp {
     pub domain: String,

@@ -1,6 +1,6 @@
 use mailfred::{
     self, logger,
-    message::{Message, Part},
+    transport::{Message, Part},
     transports::{Imap, Smtp},
 };
 

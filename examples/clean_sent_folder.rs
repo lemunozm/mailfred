@@ -1,8 +1,6 @@
 use mailfred::{
-    self,
-    connector::Connector,
-    logger,
-    message::{Message, Part},
+    self, logger,
+    transport::{Connector, Message, Part},
     transports::{Gmail, Imap},
 };
 
