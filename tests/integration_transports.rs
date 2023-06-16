@@ -9,11 +9,11 @@ mod env {
     use std::env;
 
     pub fn user() -> String {
-        env::var("MAILFRED_TEST_USER").unwrap()
+        env::var("MAILFRED_TEST_USER").expect("MAILFRED_TEST_USER environment variable")
     }
 
     pub fn password() -> String {
-        env::var("MAILFRED_TEST_PASSWORD").unwrap()
+        env::var("MAILFRED_TEST_PASSWORD").expect("MAILFRED_TEST_PASSWORD environment variable")
     }
 }
 
@@ -152,7 +152,7 @@ async fn roundtrip_async() {
 async fn run_and_stop() {
     let connector = (imap_transport(), smtp_transport());
     let handle = tokio::spawn(async move {
-        mailfred::serve(connector, |_| async { Some(vec![]) })
+        mailfred::serve(connector, |_| async { "run_and_stop" })
             .await
             .unwrap();
     });
