@@ -45,7 +45,7 @@ pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(
     }
 }
 
-pub async fn init_consumer<T: Inbound>(
+pub async fn init_consumer_task<T: Inbound>(
     imap: T,
     log_suffix: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {

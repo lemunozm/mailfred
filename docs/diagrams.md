@@ -1,6 +1,6 @@
 ```plantuml
 @startuml
-hide methods
+hide empty members
 
 package transport {
     abstract Connector {
