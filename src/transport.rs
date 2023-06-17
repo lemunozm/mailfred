@@ -22,17 +22,21 @@ pub struct Message {
     pub body: Vec<Part>,
 }
 
-/*
 impl Message {
-    pub fn part(kind Kind) -> Part {
-
+    pub fn text_iter(&self) -> impl Iterator<Item = &Part> {
+        self.body.iter().filter(|part| part.kind == Kind::Text)
     }
 
-    pub fn multipart<K1, K2> -> (Option<Part>, Option<Part>) {
+    pub fn html_iter(&self) -> impl Iterator<Item = &Part> {
+        self.body.iter().filter(|part| part.kind == Kind::Html)
+    }
 
+    pub fn attachment_iter(&self) -> impl Iterator<Item = &Part> {
+        self.body
+            .iter()
+            .filter(|part| matches!(part.kind, Kind::Attachment(_)))
     }
 }
-*/
 
 #[async_trait]
 pub trait Transport: Sync + Send {
