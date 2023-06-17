@@ -12,7 +12,11 @@ use service::Service;
 use tokio::sync::Mutex;
 use transport::{Connector, Inbound, Message};
 
-pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(), Box<dyn Error>> {
+pub async fn serve<S: Clone + Send + 'static>(
+    connector: impl Connector,
+    state: S,
+    service: impl Service<S>,
+) -> Result<(), Box<dyn Error>> {
     let (inbound, outbound) = connector.split();
 
     let mut receiver = ConnectionHandler::connect(inbound, "main").await?;
@@ -24,6 +28,7 @@ pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(
         let input = receiver.recv().await;
         let shared_sender = shared_sender.clone();
         let service = service.clone();
+        let state = state.clone();
 
         tokio::spawn(async move {
             let address = input.address.clone();
@@ -34,7 +39,7 @@ pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(
             let output = Message {
                 address,
                 header,
-                body: match service.call(input).await.into().0? {
+                body: match service.call(input, state).await.into().0? {
                     Ok(body) => body,
                     Err(body) => body,
                 },

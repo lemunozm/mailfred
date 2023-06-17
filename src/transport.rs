@@ -22,6 +22,18 @@ pub struct Message {
     pub body: Vec<Part>,
 }
 
+/*
+impl Message {
+    pub fn part(kind Kind) -> Part {
+
+    }
+
+    pub fn multipart<K1, K2> -> (Option<Part>, Option<Part>) {
+
+    }
+}
+*/
+
 #[async_trait]
 pub trait Transport: Sync + Send {
     const NAME: &'static str;
