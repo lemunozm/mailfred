@@ -83,6 +83,7 @@ pub mod response {
     use super::*;
 
     pub struct Response(pub Option<Result<Vec<Part>, Vec<Part>>>);
+
     pub type ResponseResult<R> = Result<R, Box<dyn std::error::Error>>;
 
     /// Type to indicate will not be a response.
@@ -166,7 +167,7 @@ mod tests {
 
     #[test]
     fn from_unit() {
-        service(|_| async { () });
+        service(|_| async {});
     }
 
     #[test]
