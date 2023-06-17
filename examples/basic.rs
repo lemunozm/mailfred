@@ -1,11 +1,20 @@
+use std::sync::{Arc, RwLock};
+
 use mailfred::{
     self, logger,
-    transport::{Message, Part},
+    service::{Request, Response},
     transports::{Imap, Smtp},
 };
 
-async fn echo(msg: Message) -> Option<Vec<Part>> {
-    Some(msg.body.clone())
+#[derive(Default)]
+struct MyState {
+    // User data shared accross all calls
+}
+
+type State = Arc<RwLock<MyState>>;
+
+async fn echo(req: Request, _state: State) -> impl Into<Response> {
+    req.body
 }
 
 #[tokio::main]
@@ -27,5 +36,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         password: "1234".into(),
     };
 
-    mailfred::serve((imap, smtp), echo).await
+    mailfred::serve((imap, smtp), State::default(), echo).await
 }

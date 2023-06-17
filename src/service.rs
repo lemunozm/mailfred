@@ -141,6 +141,12 @@ pub mod response {
         }
     }
 
+    impl From<Vec<Part>> for Response {
+        fn from(body: Vec<Part>) -> Response {
+            Response(Some(Ok(body)))
+        }
+    }
+
     impl<P: Into<ResponsePart>> From<P> for Response {
         fn from(part: P) -> Response {
             Response(Some(Ok(vec![part.into()])))
@@ -203,7 +209,12 @@ mod tests {
     }
 
     #[test]
-    fn from_n_parts() {
+    fn from_vec_parts() {
+        process(|_, _| async { vec!["value".into(), ("name", vec![0x65]).into()] });
+    }
+
+    #[test]
+    fn from_body() {
         process(|_, _| async { Body(("value", ("name", vec![0x65]))) });
     }
 

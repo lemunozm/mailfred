@@ -1,11 +1,11 @@
 use mailfred::{
     self, logger,
-    transport::{Message, Part},
+    service::{Request, Response},
     transports::Gmail,
 };
 
-async fn echo(msg: Message) -> Option<Vec<Part>> {
-    Some(msg.body.clone())
+async fn echo(req: Request, _state: ()) -> impl Into<Response> {
+    req.body
 }
 
 #[tokio::main]
@@ -17,5 +17,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         password: "1234".into(),
     };
 
-    mailfred::serve(gmail, echo).await
+    mailfred::serve(gmail, (), echo).await
 }

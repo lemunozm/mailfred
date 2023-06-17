@@ -1,11 +1,12 @@
 use mailfred::{
     self, logger,
-    transport::{Connector, Message, Part},
+    service::{Request, Response},
+    transport::Connector,
     transports::{Gmail, Imap},
 };
 
-async fn echo(msg: Message) -> Option<Vec<Part>> {
-    Some(msg.body.clone())
+async fn echo(req: Request, _state: ()) -> impl Into<Response> {
+    req.body
 }
 
 #[tokio::main]
@@ -26,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create a imap connection to consume all messages from that folder
-    mailfred::init_consumer(clean_sent_imap, "sent").await?;
+    mailfred::init_consumer_task(clean_sent_imap, "sent").await?;
 
-    mailfred::serve((imap, smtp), echo).await
+    mailfred::serve((imap, smtp), (), echo).await
 }
