@@ -34,7 +34,7 @@ pub async fn serve(connector: impl Connector, service: impl Service) -> Result<(
             let output = Message {
                 address,
                 header,
-                body: match service.process(input).await.into().0? {
+                body: match service.call(input).await.into().0? {
                     Ok(body) => body,
                     Err(body) => body,
                 },

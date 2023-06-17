@@ -11,19 +11,19 @@ pub type Request = Message;
 pub trait Service: Send + Clone + 'static {
     type Response: Into<Response>;
 
-    async fn process(self, req: Request) -> Self::Response;
+    async fn call(self, req: Request) -> Self::Response;
 }
 
 #[async_trait]
 impl<F, Fut, Res> Service for F
 where
-    F: FnOnce(Message) -> Fut + Clone + Send + 'static,
+    F: FnOnce(Request) -> Fut + Clone + Send + 'static,
     Fut: Future<Output = Res> + Send,
     Res: Into<Response>,
 {
     type Response = Res;
 
-    async fn process(self, req: Request) -> Self::Response {
+    async fn call(self, req: Request) -> Self::Response {
         (self)(req).await
     }
 }
@@ -158,74 +158,74 @@ pub mod response {
 mod tests {
     use super::*;
 
-    fn service(_: impl Service) {}
+    fn process(_: impl Service) {}
 
     #[test]
     fn from_cancel() {
-        service(|_| async { Cancel });
+        process(|_| async { Cancel });
     }
 
     #[test]
     fn from_unit() {
-        service(|_| async {});
+        process(|_| async {});
     }
 
     #[test]
     fn from_empty() {
-        service(|_| async { Empty });
+        process(|_| async { Empty });
     }
 
     #[test]
     fn from_str() {
-        service(|_| async { "value" });
+        process(|_| async { "value" });
     }
 
     #[test]
     fn from_str_attachment() {
-        service(|_| async { ("name", "content") });
+        process(|_| async { ("name", "content") });
     }
 
     #[test]
     fn from_string_attachment() {
-        service(|_| async { ("name", String::from("content")) });
+        process(|_| async { ("name", String::from("content")) });
     }
 
     #[test]
     fn from_vec_u8_attachment() {
-        service(|_| async { ("name", vec![0x65]) });
+        process(|_| async { ("name", vec![0x65]) });
     }
 
     #[test]
     fn from_error() {
-        service(|_| async { Error("This is an error") });
+        process(|_| async { Error("This is an error") });
     }
 
     #[test]
     fn from_n_parts() {
-        service(|_| async { Body(("value", ("name", vec![0x65]))) });
+        process(|_| async { Body(("value", ("name", vec![0x65]))) });
     }
 
     #[test]
     fn from_option() {
-        async fn handler(req: Request) -> Option<impl Into<Response>> {
+        async fn service(req: Request) -> Option<impl Into<Response>> {
             match req.body.len() {
                 1 => Some("response"),
                 _ => None,
             }
         }
 
-        service(handler);
+        process(service);
     }
 
     #[test]
     fn from_result() {
-        async fn handler(req: Request) -> Result<impl Into<Response>, Box<dyn std::error::Error>> {
+        async fn service(req: Request) -> Result<impl Into<Response>, Box<dyn std::error::Error>> {
             match req.body.len() {
                 1 => Ok("Correct response"),
                 _ => Err("Error response")?,
             }
         }
 
-        service(handler);
+        process(service);
     }
 }
