@@ -1,7 +1,7 @@
-use std::{error::Error, fmt::Display, future::Future};
+use std::{fmt::Display, future::Future};
 
 use async_trait::async_trait;
-pub use response::{Body, Cancel, Empty, Response, ResponseResult};
+pub use response::{Body, Cancel, Empty, Error, Response, ResponseResult};
 pub use response_part::ResponsePart;
 
 use crate::transport::{Kind, Message, Part};
@@ -83,7 +83,7 @@ pub mod response {
     use super::*;
 
     pub struct Response(pub Option<Result<Vec<Part>, Vec<Part>>>);
-    pub type ResponseResult<R> = Result<R, Box<dyn Error>>;
+    pub type ResponseResult<R> = Result<R, Box<dyn std::error::Error>>;
 
     /// Type to indicate will not be a response.
     /// Similar to `()` but more verbose.
@@ -106,6 +106,23 @@ pub mod response {
     impl From<Empty> for Response {
         fn from(_: Empty) -> Response {
             Response(Some(Ok(vec![])))
+        }
+    }
+
+    pub struct Error<T>(pub T);
+
+    impl<T: Into<ResponsePart>> From<Error<T>> for Response {
+        fn from(error: Error<T>) -> Response {
+            Response(Some(Err(vec![error.0.into()])))
+        }
+    }
+
+    impl<T: Into<Response>> From<Option<T>> for Response {
+        fn from(option: Option<T>) -> Response {
+            match option {
+                Some(reponse) => reponse.into(),
+                None => Response(None),
+            }
         }
     }
 
@@ -178,19 +195,34 @@ mod tests {
     }
 
     #[test]
+    fn from_error() {
+        service(|_| async { Error("This is an error") });
+    }
+
+    #[test]
     fn from_n_parts() {
         service(|_| async { Body(("value", ("name", vec![0x65]))) });
     }
 
     #[test]
-    fn from_result() {
-        async fn handler(req: Request) -> ResponseResult<impl Into<Response>> {
-            let value = match req.body.len() {
-                1 => "Correct response",
-                _ => Err("error")?,
-            };
+    fn from_option() {
+        async fn handler(req: Request) -> Option<impl Into<Response>> {
+            match req.body.len() {
+                1 => Some("response"),
+                _ => None,
+            }
+        }
 
-            Ok(value)
+        service(handler);
+    }
+
+    #[test]
+    fn from_result() {
+        async fn handler(req: Request) -> Result<impl Into<Response>, Box<dyn std::error::Error>> {
+            match req.body.len() {
+                1 => Ok("Correct response"),
+                _ => Err("Error response")?,
+            }
         }
 
         service(handler);
