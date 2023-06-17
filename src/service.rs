@@ -1,13 +1,12 @@
 use std::{error::Error, fmt::Display, future::Future};
 
 use async_trait::async_trait;
+pub use response::{Body, Cancel, Empty, Response, ResponseResult};
+pub use response_part::ResponsePart;
 
 use crate::transport::{Kind, Message, Part};
 
 pub type Request = Message;
-pub struct Response(pub Option<Vec<Part>>);
-pub type ResponseResult<R> = Result<R, Box<dyn Error>>;
-
 #[async_trait]
 pub trait Service: Send + Clone + 'static {
     type Response: Into<Response>;
@@ -29,92 +28,113 @@ where
     }
 }
 
-/// Type to indicate will not be a response.
-/// Similar to `()` but more verbose.
-struct Cancel;
+pub mod response_part {
+    use super::*;
 
-impl From<Cancel> for Response {
-    fn from(_: Cancel) -> Response {
-        Response(None)
+    pub type ResponsePart = Part;
+
+    impl<'a> From<&'a str> for ResponsePart {
+        fn from(value: &'a str) -> ResponsePart {
+            ResponsePart {
+                kind: Kind::Text,
+                content: value.as_bytes().into(),
+            }
+        }
     }
-}
 
-impl From<()> for Response {
-    fn from(_: ()) -> Response {
-        Response(None)
+    impl From<String> for ResponsePart {
+        fn from(value: String) -> ResponsePart {
+            ResponsePart {
+                kind: Kind::Text,
+                content: value.as_bytes().into(),
+            }
+        }
     }
-}
 
-struct Empty;
-
-impl From<Empty> for Response {
-    fn from(_: Empty) -> Response {
-        Response(Some(vec![]))
+    impl<'a, N: AsRef<str>> From<(N, &'a str)> for ResponsePart {
+        fn from((name, content): (N, &'a str)) -> ResponsePart {
+            ResponsePart {
+                kind: Kind::Attachment(name.as_ref().into()),
+                content: content.as_bytes().into(),
+            }
+        }
     }
-}
 
-impl<'a> From<&'a str> for Response {
-    fn from(value: &'a str) -> Response {
-        Response(Some(vec![Part {
-            kind: Kind::Text,
-            content: value.as_bytes().into(),
-        }]))
+    impl<N: AsRef<str>> From<(N, String)> for ResponsePart {
+        fn from((name, content): (N, String)) -> ResponsePart {
+            ResponsePart {
+                kind: Kind::Attachment(name.as_ref().into()),
+                content: content.as_bytes().into(),
+            }
+        }
     }
-}
 
-impl From<String> for Response {
-    fn from(value: String) -> Response {
-        Response(Some(vec![Part {
-            kind: Kind::Text,
-            content: value.as_bytes().into(),
-        }]))
-    }
-}
-
-impl<'a, N: AsRef<str>> From<(N, &'a str)> for Response {
-    fn from((name, content): (N, &'a str)) -> Response {
-        Response(Some(vec![Part {
-            kind: Kind::Attachment(name.as_ref().into()),
-            content: content.as_bytes().into(),
-        }]))
-    }
-}
-
-impl<N: AsRef<str>> From<(N, String)> for Response {
-    fn from((name, content): (N, String)) -> Response {
-        Response(Some(vec![Part {
-            kind: Kind::Attachment(name.as_ref().into()),
-            content: content.as_bytes().into(),
-        }]))
-    }
-}
-
-impl<N: AsRef<str>> From<(N, Vec<u8>)> for Response {
-    fn from((name, content): (N, Vec<u8>)) -> Response {
-        Response(Some(vec![Part {
-            kind: Kind::Attachment(name.as_ref().into()),
-            content: content.into(),
-        }]))
-    }
-}
-
-impl<T: Into<Response>, E: Display> From<Result<T, E>> for Response {
-    fn from(result: Result<T, E>) -> Response {
-        match result {
-            Ok(reponse) => reponse.into(),
-            Err(err) => err.to_string().into(),
+    impl<N: AsRef<str>> From<(N, Vec<u8>)> for ResponsePart {
+        fn from((name, content): (N, Vec<u8>)) -> ResponsePart {
+            ResponsePart {
+                kind: Kind::Attachment(name.as_ref().into()),
+                content: content.into(),
+            }
         }
     }
 }
 
-/*
-impl<T1: Into<Response>, T2: Into<Response>> From<(T1, T2)> for Response {
-    fn from((t1, t2): (T1, T2) -> Response {
-        t1.0?
-        Response(vec![t1.])
+pub mod response {
+    use super::*;
+
+    pub struct Response(pub Option<Result<Vec<Part>, Vec<Part>>>);
+    pub type ResponseResult<R> = Result<R, Box<dyn Error>>;
+
+    /// Type to indicate will not be a response.
+    /// Similar to `()` but more verbose.
+    pub struct Cancel;
+
+    impl From<Cancel> for Response {
+        fn from(_: Cancel) -> Response {
+            Response(None)
+        }
+    }
+
+    impl From<()> for Response {
+        fn from(_: ()) -> Response {
+            Response(None)
+        }
+    }
+
+    pub struct Empty;
+
+    impl From<Empty> for Response {
+        fn from(_: Empty) -> Response {
+            Response(Some(Ok(vec![])))
+        }
+    }
+
+    impl<T: Into<Response>, E: Display> From<Result<T, E>> for Response {
+        fn from(result: Result<T, E>) -> Response {
+            match result {
+                Ok(reponse) => reponse.into(),
+                Err(err) => Response(Some(Err(vec![Part {
+                    kind: Kind::Text,
+                    content: err.to_string().as_bytes().into(),
+                }]))),
+            }
+        }
+    }
+
+    impl<P: Into<ResponsePart>> From<P> for Response {
+        fn from(part: P) -> Response {
+            Response(Some(Ok(vec![part.into()])))
+        }
+    }
+
+    pub struct Body<T>(pub T);
+
+    impl<P1: Into<ResponsePart>, P2: Into<ResponsePart>> From<Body<(P1, P2)>> for Response {
+        fn from(Body((p1, p2)): Body<(P1, P2)>) -> Response {
+            Response(Some(Ok(vec![p1.into(), p2.into()])))
+        }
     }
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -155,6 +175,11 @@ mod tests {
     #[test]
     fn from_vec_u8_attachment() {
         service(|_| async { ("name", vec![0x65]) });
+    }
+
+    #[test]
+    fn from_n_parts() {
+        service(|_| async { Body(("value", ("name", vec![0x65]))) });
     }
 
     #[test]
