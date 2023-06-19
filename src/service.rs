@@ -97,7 +97,7 @@ pub mod response {
 
     pub struct Response(pub Option<Result<Vec<Part>, Vec<Part>>>);
 
-    pub type ResponseResult<R> = Result<R, Box<dyn std::error::Error>>;
+    pub type ResponseResult = Result<Response, Box<dyn std::error::Error>>;
 
     /// Type to indicate will not be a response.
     /// Similar to `()` but more verbose.
