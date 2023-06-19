@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::transport::{Inbound, Message, Outbound, Receiver, Sender, Transport};
 
-const MAX_DELAY_CONNECTION_RETRY: Duration = Duration::from_secs(256);
+const MAX_RECONNETION_ATTEMPS: u32 = 10;
 
 pub struct ConnectionHandler<T: Transport> {
     transport: T,
@@ -30,7 +30,7 @@ impl<T: Transport> ConnectionHandler<T> {
     }
 
     async fn force_connect(&mut self) {
-        let mut waiting = Duration::from_secs(1); //secs
+        let mut attempts: u32 = 0;
         loop {
             log::trace!("{}: trying to reconnect...", self.log_name);
             match self.transport.connect().await {
@@ -40,13 +40,25 @@ impl<T: Transport> ConnectionHandler<T> {
                     break;
                 }
                 Err(_) => {
-                    log::warn!(
+                    let waiting_secs = 2u64.pow(attempts);
+
+                    log::debug!(
                         "{}: reconnection failed, retry in {}",
                         self.log_name,
-                        waiting.as_secs()
+                        waiting_secs
                     );
-                    tokio::time::sleep(waiting).await;
-                    waiting = (waiting * 2).max(MAX_DELAY_CONNECTION_RETRY);
+
+                    tokio::time::sleep(Duration::from_secs(waiting_secs)).await;
+
+                    if attempts == MAX_RECONNETION_ATTEMPS - 1 {
+                        log::warn!(
+                            "{}: Connection issue, more than {}",
+                            self.log_name,
+                            attempts
+                        );
+                    }
+
+                    attempts = (attempts + 1).max(MAX_RECONNETION_ATTEMPS);
                 }
             }
         }
@@ -62,7 +74,7 @@ impl<T: Inbound> ConnectionHandler<T> {
                     break msg;
                 }
                 Err(_) => {
-                    log::warn!("{}: message could not be received", self.log_name);
+                    log::debug!("{}: receiver connection lost", self.log_name);
                     self.force_connect().await
                 }
             }
@@ -79,8 +91,8 @@ impl<T: Outbound> ConnectionHandler<T> {
                     break;
                 }
                 Err(_) => {
-                    log::warn!(
-                        "{}: message could not be sent to {}",
+                    log::debug!(
+                        "{}: sender connection lost. Trying to send to {}",
                         self.log_name,
                         msg.address
                     );

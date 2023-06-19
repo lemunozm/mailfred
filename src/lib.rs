@@ -20,8 +20,8 @@ pub async fn serve<S: Clone + Send + 'static>(
 ) -> Result<(), Box<dyn Error>> {
     let (inbound, outbound) = connector.split();
 
-    let mut receiver = ConnectionHandler::connect(inbound, "main").await?;
-    let sender = ConnectionHandler::connect(outbound, "main").await?;
+    let mut receiver = ConnectionHandler::connect(inbound, "").await?;
+    let sender = ConnectionHandler::connect(outbound, "").await?;
 
     let shared_sender = Arc::new(Mutex::new(sender));
     let shared_service = Arc::new(service);
