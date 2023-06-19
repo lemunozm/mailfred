@@ -12,7 +12,13 @@ pub struct ConnectionHandler<T: Transport> {
 
 impl<T: Transport> ConnectionHandler<T> {
     pub async fn connect(transport: T, log_suffix: &str) -> Result<Self, T::Error> {
-        let log_name = format!("{}-{}", T::NAME, log_suffix);
+        let log_name = format!(
+            "{}{}{}",
+            T::NAME,
+            if log_suffix.is_empty() { "" } else { "-" },
+            log_suffix
+        );
+
         Ok(Self {
             conn: match transport.connect().await {
                 Ok(conn) => {
