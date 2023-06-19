@@ -2,30 +2,30 @@ use std::{fmt::Display, future::Future};
 
 use async_trait::async_trait;
 pub use response::{Body, Cancel, Empty, Error, Response, ResponseResult};
-pub use response_part::ResponsePart;
+pub use response_part::{Html, ResponsePart};
 
 use crate::transport::{Kind, Message, Part};
 
 pub type Request = Message;
 
 #[async_trait]
-pub trait Service<State>: Send + Clone + 'static {
+pub trait Service<State>: Send + Sync + 'static {
     type Response: Into<Response>;
 
-    async fn call(self, req: Request, state: State) -> Self::Response;
+    async fn call(&self, req: Request, state: State) -> Self::Response;
 }
 
 #[async_trait]
 impl<State, F, Fut, Res> Service<State> for F
 where
-    F: FnOnce(Request, State) -> Fut + Clone + Send + 'static,
+    F: Fn(Request, State) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Res> + Send,
     Res: Into<Response>,
     State: Send + 'static,
 {
     type Response = Res;
 
-    async fn call(self, req: Request, state: State) -> Self::Response {
+    async fn call(&self, req: Request, state: State) -> Self::Response {
         (self)(req, state).await
     }
 }
@@ -36,7 +36,7 @@ pub mod response_part {
     pub type ResponsePart = Part;
 
     impl<'a> From<&'a str> for ResponsePart {
-        fn from(value: &'a str) -> ResponsePart {
+        fn from(value: &'a str) -> Self {
             ResponsePart {
                 kind: Kind::Text,
                 content: value.as_bytes().into(),
@@ -45,7 +45,7 @@ pub mod response_part {
     }
 
     impl From<String> for ResponsePart {
-        fn from(value: String) -> ResponsePart {
+        fn from(value: String) -> Self {
             ResponsePart {
                 kind: Kind::Text,
                 content: value.as_bytes().into(),
@@ -53,8 +53,19 @@ pub mod response_part {
         }
     }
 
+    pub struct Html(pub String);
+
+    impl From<Html> for ResponsePart {
+        fn from(value: Html) -> Self {
+            ResponsePart {
+                kind: Kind::Html,
+                content: value.0.as_bytes().into(),
+            }
+        }
+    }
+
     impl<'a, N: AsRef<str>> From<(N, &'a str)> for ResponsePart {
-        fn from((name, content): (N, &'a str)) -> ResponsePart {
+        fn from((name, content): (N, &'a str)) -> Self {
             ResponsePart {
                 kind: Kind::Attachment(name.as_ref().into()),
                 content: content.as_bytes().into(),
@@ -63,7 +74,7 @@ pub mod response_part {
     }
 
     impl<N: AsRef<str>> From<(N, String)> for ResponsePart {
-        fn from((name, content): (N, String)) -> ResponsePart {
+        fn from((name, content): (N, String)) -> Self {
             ResponsePart {
                 kind: Kind::Attachment(name.as_ref().into()),
                 content: content.as_bytes().into(),
@@ -72,7 +83,7 @@ pub mod response_part {
     }
 
     impl<N: AsRef<str>> From<(N, Vec<u8>)> for ResponsePart {
-        fn from((name, content): (N, Vec<u8>)) -> ResponsePart {
+        fn from((name, content): (N, Vec<u8>)) -> Self {
             ResponsePart {
                 kind: Kind::Attachment(name.as_ref().into()),
                 content: content.into(),
@@ -115,13 +126,13 @@ pub mod response {
     pub struct Error<T>(pub T);
 
     impl<T: Into<ResponsePart>> From<Error<T>> for Response {
-        fn from(error: Error<T>) -> Response {
+        fn from(error: Error<T>) -> Self {
             Response(Some(Err(vec![error.0.into()])))
         }
     }
 
     impl<T: Into<Response>> From<Option<T>> for Response {
-        fn from(option: Option<T>) -> Response {
+        fn from(option: Option<T>) -> Self {
             match option {
                 Some(reponse) => reponse.into(),
                 None => Response(None),
@@ -130,7 +141,7 @@ pub mod response {
     }
 
     impl<T: Into<Response>, E: Display> From<Result<T, E>> for Response {
-        fn from(result: Result<T, E>) -> Response {
+        fn from(result: Result<T, E>) -> Self {
             match result {
                 Ok(reponse) => reponse.into(),
                 Err(err) => Response(Some(Err(vec![Part {
@@ -142,13 +153,13 @@ pub mod response {
     }
 
     impl From<Vec<Part>> for Response {
-        fn from(body: Vec<Part>) -> Response {
+        fn from(body: Vec<Part>) -> Self {
             Response(Some(Ok(body)))
         }
     }
 
     impl<P: Into<ResponsePart>> From<P> for Response {
-        fn from(part: P) -> Response {
+        fn from(part: P) -> Self {
             Response(Some(Ok(vec![part.into()])))
         }
     }
@@ -156,7 +167,7 @@ pub mod response {
     pub struct Body<T>(pub T);
 
     impl<P1: Into<ResponsePart>, P2: Into<ResponsePart>> From<Body<(P1, P2)>> for Response {
-        fn from(Body((p1, p2)): Body<(P1, P2)>) -> Response {
+        fn from(Body((p1, p2)): Body<(P1, P2)>) -> Self {
             Response(Some(Ok(vec![p1.into(), p2.into()])))
         }
     }

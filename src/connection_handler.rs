@@ -37,6 +37,7 @@ impl<T: Transport> ConnectionHandler<T> {
                 Ok(conn) => {
                     self.conn = conn;
                     log::info!("{}: reconnected!", self.log_name);
+                    break;
                 }
                 Err(_) => {
                     log::warn!(

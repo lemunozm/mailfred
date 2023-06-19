@@ -1,6 +1,7 @@
 mod connection_handler;
 #[cfg(feature = "logger")]
 pub mod logger;
+pub mod router;
 pub mod service;
 pub mod transport;
 pub mod transports;
@@ -23,11 +24,12 @@ pub async fn serve<S: Clone + Send + 'static>(
     let sender = ConnectionHandler::connect(outbound, "main").await?;
 
     let shared_sender = Arc::new(Mutex::new(sender));
+    let shared_service = Arc::new(service);
 
     loop {
         let input = receiver.recv().await;
-        let shared_sender = shared_sender.clone();
-        let service = service.clone();
+        let sender = shared_sender.clone();
+        let service = shared_service.clone();
         let state = state.clone();
 
         tokio::spawn(async move {
@@ -45,7 +47,7 @@ pub async fn serve<S: Clone + Send + 'static>(
                 },
             };
 
-            let mut sender = shared_sender.lock().await;
+            let mut sender = sender.lock().await;
             sender.send(&output).await;
 
             Some(())
