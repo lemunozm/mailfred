@@ -10,7 +10,7 @@ async fn echo(req: Request, _state: ()) -> ResponseResult {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), anyhow::Error> {
     logger::configure(log::LevelFilter::Trace);
 
     let gmail = Gmail {

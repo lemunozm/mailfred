@@ -52,21 +52,21 @@ pub trait Transport: Sync + Send {
     const NAME: &'static str;
 
     type Connection: Send;
-    type Error: Send + Error + 'static;
+    type Error: Send + Sync + Error + 'static;
 
     async fn connect(&self) -> Result<Self::Connection, Self::Error>;
 }
 
 #[async_trait]
 pub trait Sender: Sized + Send {
-    type Error: Send + Error + 'static;
+    type Error: Send + Sync + Error + 'static;
 
     async fn send(&mut self, msg: &Message) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
 pub trait Receiver: Sized + Send {
-    type Error: Send + Error + 'static;
+    type Error: Send + Sync + Error + 'static;
 
     async fn recv(&mut self) -> Result<Message, Self::Error>;
 }

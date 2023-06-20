@@ -7,7 +7,7 @@ pub mod service;
 pub mod transport;
 pub mod transports;
 
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 use connection_handler::ConnectionHandler;
 use service::Service;
@@ -18,7 +18,7 @@ pub async fn serve<S: Clone + Send + 'static>(
     connector: impl Connector,
     state: S,
     service: impl Service<S>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), anyhow::Error> {
     let (inbound, outbound) = connector.split();
 
     let mut receiver = ConnectionHandler::connect(inbound, "").await?;
@@ -58,10 +58,7 @@ pub async fn serve<S: Clone + Send + 'static>(
     }
 }
 
-pub async fn init_consumer_task<T: Inbound>(
-    imap: T,
-    log_suffix: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn init_consumer_task<T: Inbound>(imap: T, log_suffix: &str) -> Result<(), T::Error> {
     let log_suffix = format!("{}-consumer", log_suffix);
     let mut consumer = ConnectionHandler::connect(imap, &log_suffix).await?;
 
