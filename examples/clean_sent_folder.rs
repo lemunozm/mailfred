@@ -1,9 +1,12 @@
 use mailfred::{
-    self, logger,
-    response::{Response, ResponseResult},
-    service::Request,
+    self,
+    service::{
+        response::{Response, ResponseResult},
+        Request,
+    },
     transport::Connector,
     transports::{Gmail, Imap},
+    util::logger,
 };
 
 async fn echo(req: Request, _state: ()) -> ResponseResult {

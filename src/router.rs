@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 
-use crate::{
+use crate::service::{
     response::{Response, ResponseResult},
-    service::{Request, Service},
+    Request, Service,
 };
 
 pub trait Filter: Send + Sync + 'static {

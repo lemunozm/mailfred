@@ -1,8 +1,11 @@
+pub mod response;
+
 use std::future::Future;
 
 use async_trait::async_trait;
+use response::ResponseResult;
 
-use crate::{response::ResponseResult, transport::Message};
+use crate::message::Message;
 
 pub type Request = Message;
 

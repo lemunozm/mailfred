@@ -2,71 +2,28 @@ use std::error::Error;
 
 use async_trait::async_trait;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Kind {
-    Text,
-    Html,
-    Attachment(String),
-}
-
-impl Kind {
-    pub fn attachment_name(&self) -> &str {
-        match self {
-            Kind::Attachment(name) => name,
-            _ => panic!("Kind is not an attachment"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Part {
-    pub kind: Kind,
-    pub content: Vec<u8>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Message {
-    pub address: String,
-    pub header: String,
-    pub body: Vec<Part>,
-}
-
-impl Message {
-    pub fn text_iter(&self) -> impl Iterator<Item = &Part> {
-        self.body.iter().filter(|part| part.kind == Kind::Text)
-    }
-
-    pub fn html_iter(&self) -> impl Iterator<Item = &Part> {
-        self.body.iter().filter(|part| part.kind == Kind::Html)
-    }
-
-    pub fn attachment_iter(&self) -> impl Iterator<Item = &Part> {
-        self.body
-            .iter()
-            .filter(|part| matches!(part.kind, Kind::Attachment(_)))
-    }
-}
+use crate::message::Message;
 
 #[async_trait]
 pub trait Transport: Sync + Send {
     const NAME: &'static str;
 
     type Connection: Send;
-    type Error: Send + Sync + Error + 'static;
+    type Error: Error + Send + Sync + 'static;
 
     async fn connect(&self) -> Result<Self::Connection, Self::Error>;
 }
 
 #[async_trait]
 pub trait Sender: Sized + Send {
-    type Error: Send + Sync + Error + 'static;
+    type Error: Error + Send + Sync + 'static;
 
     async fn send(&mut self, msg: &Message) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
 pub trait Receiver: Sized + Send {
-    type Error: Send + Sync + Error + 'static;
+    type Error: Error + Send + Sync + 'static;
 
     async fn recv(&mut self) -> Result<Message, Self::Error>;
 }

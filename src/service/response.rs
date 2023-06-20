@@ -3,7 +3,7 @@ use std::fmt::Display;
 pub use response_body::{Parts, ResponseBody};
 pub use response_part::{Html, ResponsePart};
 
-use crate::transport::{Kind, Part};
+pub use crate::message::{Kind, Part};
 
 pub mod response_part {
     use super::*;

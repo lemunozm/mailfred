@@ -15,7 +15,10 @@ use tokio::{
     sync::{mpsc, Notify},
 };
 
-use crate::transport::{Kind, Message, Part, Receiver, Transport};
+use crate::{
+    message::{Kind, Message, Part},
+    transport::{Receiver, Transport},
+};
 
 #[derive(Clone)]
 pub struct Imap {

@@ -1,18 +1,21 @@
 mod connection_handler;
-#[cfg(feature = "logger")]
-pub mod logger;
-pub mod response;
+pub mod message;
 pub mod router;
 pub mod service;
 pub mod transport;
 pub mod transports;
+pub mod util {
+    #[cfg(feature = "logger")]
+    pub mod logger;
+}
 
 use std::sync::Arc;
 
 use connection_handler::ConnectionHandler;
+use message::Message;
 use service::Service;
 use tokio::sync::Mutex;
-use transport::{Connector, Inbound, Message};
+use transport::{Connector, Inbound};
 
 pub async fn serve<S: Clone + Send + 'static>(
     connector: impl Connector,

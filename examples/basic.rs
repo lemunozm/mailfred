@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use mailfred::{
-    self, logger,
-    response::{Response, ResponseResult},
-    service::Request,
+    self,
+    service::{
+        response::{Response, ResponseResult},
+        Request,
+    },
     transports::{Imap, Smtp},
+    util::logger,
 };
 use tokio::sync::Mutex;
 

@@ -1,6 +1,9 @@
 use std::time::Duration;
 
-use crate::transport::{Inbound, Message, Outbound, Receiver, Sender, Transport};
+use crate::{
+    message::Message,
+    transport::{Inbound, Outbound, Receiver, Sender, Transport},
+};
 
 const MAX_RECONNETION_ATTEMPS: u32 = 10;
 
