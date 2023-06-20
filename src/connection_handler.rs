@@ -42,13 +42,13 @@ impl<T: Transport> ConnectionHandler<T> {
             match self.transport.connect().await {
                 Ok(conn) => {
                     self.conn = conn;
-                    log::info!("{}: reconnected!", self.log_name);
+                    log::trace!("{}: reconnected!", self.log_name);
                     break;
                 }
                 Err(_) => {
                     let waiting_secs = 2u64.pow(attempts);
 
-                    log::debug!(
+                    log::trace!(
                         "{}: reconnection failed, retry in {}",
                         self.log_name,
                         waiting_secs
@@ -58,7 +58,7 @@ impl<T: Transport> ConnectionHandler<T> {
 
                     if attempts == MAX_RECONNETION_ATTEMPS - 1 {
                         log::warn!(
-                            "{}: Connection issue, more than {}",
+                            "{}: Connection issue, more than {} reconnection attempts",
                             self.log_name,
                             attempts
                         );
@@ -80,7 +80,7 @@ impl<T: Inbound> ConnectionHandler<T> {
                     break msg;
                 }
                 Err(_) => {
-                    log::debug!("{}: receiver connection lost", self.log_name);
+                    log::trace!("{}: receiver connection lost", self.log_name);
                     self.force_connect().await
                 }
             }
@@ -97,7 +97,7 @@ impl<T: Outbound> ConnectionHandler<T> {
                     break;
                 }
                 Err(_) => {
-                    log::debug!(
+                    log::trace!(
                         "{}: sender connection lost. Trying to send to {}",
                         self.log_name,
                         msg.address
