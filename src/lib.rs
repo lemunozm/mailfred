@@ -19,7 +19,7 @@ use transport::{Connector, Inbound};
 
 pub async fn serve<S: Clone + Send + 'static>(
     connector: impl Connector,
-    state: S,
+    shared_state: S,
     service: impl Service<S>,
 ) -> Result<(), anyhow::Error> {
     let (inbound, outbound) = connector.split();
@@ -34,7 +34,7 @@ pub async fn serve<S: Clone + Send + 'static>(
         let input = receiver.recv().await;
         let sender = shared_sender.clone();
         let service = shared_service.clone();
-        let state = state.clone();
+        let state = shared_state.clone();
 
         tokio::spawn(async move {
             let address = input.address.clone();
