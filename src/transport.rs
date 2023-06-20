@@ -9,6 +9,15 @@ pub enum Kind {
     Attachment(String),
 }
 
+impl Kind {
+    pub fn attachment_name(&self) -> &str {
+        match self {
+            Kind::Attachment(name) => name,
+            _ => panic!("Kind is not an attachment"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Part {
     pub kind: Kind,

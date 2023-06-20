@@ -1,11 +1,12 @@
 use mailfred::{
     self, logger,
-    service::{Request, Response},
+    response::{Response, ResponseResult},
+    service::Request,
     transports::Gmail,
 };
 
-async fn echo(req: Request, _state: ()) -> impl Into<Response> {
-    req.body
+async fn echo(req: Request, _state: ()) -> ResponseResult {
+    Response::ok(req.header, req.body)
 }
 
 #[tokio::main]

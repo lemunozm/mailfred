@@ -13,6 +13,7 @@ giving a corresponding email response.
 - Documentation
 - Router
 - Last renames and ergonomics
+- CSV example
 
 ## API ideas
 ```rust

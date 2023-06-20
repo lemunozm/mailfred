@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use mailfred::{
+    response::Response,
     transport::{Kind, Message, Part, Receiver, Sender, Transport},
     transports::{Imap, Smtp},
 };
@@ -152,9 +153,11 @@ async fn roundtrip_async() {
 async fn run_and_stop() {
     let connector = (imap_transport(), smtp_transport());
     let handle = tokio::spawn(async move {
-        mailfred::serve(connector, (), |_, _| async { "run_and_stop" })
-            .await
-            .unwrap();
+        mailfred::serve(connector, (), |_, _| async {
+            Response::ok("run_and_stop", ())
+        })
+        .await
+        .unwrap();
     });
 
     tokio::time::sleep(Duration::from_secs(5)).await;

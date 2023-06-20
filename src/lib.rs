@@ -1,6 +1,7 @@
 mod connection_handler;
 #[cfg(feature = "logger")]
 pub mod logger;
+pub mod response;
 pub mod router;
 pub mod service;
 pub mod transport;
@@ -38,13 +39,15 @@ pub async fn serve<S: Clone + Send + 'static>(
 
             log::info!("Process message for '{}' with header '{}'", address, header);
 
+            let response = match service.call(input, state).await {
+                Ok(response) => response?,
+                Err(response) => response,
+            };
+
             let output = Message {
                 address,
-                header,
-                body: match service.call(input, state).await.into().0? {
-                    Ok(body) => body,
-                    Err(body) => body,
-                },
+                header: response.header,
+                body: response.body.0,
             };
 
             let mut sender = sender.lock().await;

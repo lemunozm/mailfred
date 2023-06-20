@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use mailfred::{
     self, logger,
-    service::{Request, Response},
+    response::{Response, ResponseResult},
+    service::Request,
     transports::{Imap, Smtp},
 };
 use tokio::sync::Mutex;
@@ -14,8 +15,8 @@ struct MyState {
 
 type State = Arc<Mutex<MyState>>;
 
-async fn echo(req: Request, _state: State) -> impl Into<Response> {
-    req.body
+async fn echo(req: Request, _state: State) -> ResponseResult {
+    Response::ok(req.header, req.body)
 }
 
 #[tokio::main]

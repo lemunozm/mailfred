@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 
-use crate::service::{Cancel, Request, Response, Service};
+use crate::{
+    response::{Response, ResponseResult},
+    service::{Request, Service},
+};
 
 pub trait Filter: Send + Sync + 'static {
     fn check(&self, header: &str) -> bool;
@@ -27,7 +30,7 @@ pub trait Layer: Send + Sync + 'static {
         request
     }
 
-    fn map_response(&self, response: Response) -> Response {
+    fn map_response(&self, response: ResponseResult) -> ResponseResult {
         response
     }
 }
@@ -43,6 +46,17 @@ impl Layer for LowercaseHeader {
     }
 }
 
+pub struct ErrorHeader(pub &'static str);
+
+impl Layer for ErrorHeader {
+    fn map_response(&self, response: ResponseResult) -> ResponseResult {
+        response.map_err(|response| Response {
+            header: self.0.into(),
+            ..response
+        })
+    }
+}
+
 pub struct Route<F, S> {
     filter: F,
     service: S,
@@ -55,9 +69,7 @@ where
     F: Send + Sync + 'static,
     S: Service<State>,
 {
-    type Response = Response;
-
-    async fn call(&self, request: Request, state: State) -> Self::Response {
+    async fn call(&self, request: Request, state: State) -> ResponseResult {
         self.service.call(request, state).await.into()
     }
 }
@@ -77,7 +89,7 @@ impl<State, T> RouteTraits<State> for T where T: Service<State> + Filter {}
 
 #[derive(Default)]
 pub struct Router<State> {
-    routes: Vec<Box<dyn RouteTraits<State, Response = Response>>>,
+    routes: Vec<Box<dyn RouteTraits<State>>>,
     layers: Vec<Box<dyn Layer>>,
 }
 
@@ -95,9 +107,7 @@ impl<State: Send + Sync + 'static> Router<State> {
 
 #[async_trait]
 impl<State: Sync + Send + 'static> Service<State> for Router<State> {
-    type Response = Response;
-
-    async fn call(&self, request: Request, state: State) -> Self::Response {
+    async fn call(&self, request: Request, state: State) -> ResponseResult {
         let request = self
             .layers
             .iter()
@@ -110,7 +120,7 @@ impl<State: Sync + Send + 'static> Service<State> for Router<State> {
 
         let response = match route {
             Some(route) => route.clone().call(request, state).await,
-            None => Cancel.into(),
+            None => Response::none(),
         };
 
         self.layers
