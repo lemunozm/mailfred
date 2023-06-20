@@ -1,12 +1,8 @@
 use mailfred::{
     self,
-    service::{
-        response::{Response, ResponseResult},
-        Request,
-    },
+    service::{Request, Response, ResponseResult},
     transport::Connector,
     transports::{Gmail, Imap},
-    util::logger,
 };
 
 async fn echo(req: Request, _state: ()) -> ResponseResult {
@@ -15,7 +11,8 @@ async fn echo(req: Request, _state: ()) -> ResponseResult {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    logger::configure(log::LevelFilter::Trace);
+    #[cfg(feature = "logger")]
+    mailfred::util::logger::configure(log::LevelFilter::Trace);
 
     let (imap, smtp) = Gmail {
         username: "user".into(),

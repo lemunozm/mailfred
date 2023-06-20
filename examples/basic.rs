@@ -2,29 +2,29 @@ use std::sync::Arc;
 
 use mailfred::{
     self,
-    service::{
-        response::{Response, ResponseResult},
-        Request,
-    },
+    service::{Request, Response, ResponseResult},
     transports::{Imap, Smtp},
-    util::logger,
 };
 use tokio::sync::Mutex;
 
 #[derive(Default)]
 struct MyState {
-    // User data shared accross all calls
+    counter: u32,
 }
 
 type State = Arc<Mutex<MyState>>;
 
-async fn echo(req: Request, _state: State) -> ResponseResult {
-    Response::ok(req.header, req.body)
+async fn count(req: Request, state: State) -> ResponseResult {
+    let mut state = state.lock().await;
+    state.counter += 1;
+
+    Response::ok(req.header, format!("Counter: {}", state.counter))
 }
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    logger::configure(log::LevelFilter::Trace);
+    #[cfg(feature = "logger")]
+    mailfred::util::logger::configure(log::LevelFilter::Trace);
 
     let imap = Imap {
         domain: "imap.gmail.com".into(),
@@ -41,5 +41,5 @@ async fn main() -> Result<(), anyhow::Error> {
         password: "1234".into(),
     };
 
-    mailfred::serve((imap, smtp), State::default(), echo).await
+    mailfred::serve((imap, smtp), State::default(), count).await
 }

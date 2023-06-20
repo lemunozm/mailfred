@@ -1,7 +1,7 @@
 [package]
 name = "mailfred"
 authors = ["lemunozm <lemunozm@gmail.com>"]
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 readme = "README.md"
 license = "Apache-2.0"
@@ -58,12 +58,12 @@ required-features = ["imap", "smtp"]
 
 [[example]]
 name = "basic"
-required-features = ["imap", "smtp", "logger"]
+required-features = ["imap", "smtp"]
 
 [[example]]
 name = "gmail"
-required-features = ["imap", "smtp", "logger"]
+required-features = ["imap", "smtp"]
 
 [[example]]
 name = "clean_sent_folder"
-required-features = ["imap", "smtp", "logger"]
+required-features = ["imap", "smtp"]

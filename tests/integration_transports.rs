@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use mailfred::{
     message::{Kind, Message, Part},
-    service::response::Response,
+    service::Response,
     transport::{Receiver, Sender, Transport},
     transports::{Imap, Smtp},
 };
