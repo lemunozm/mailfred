@@ -1,5 +1,5 @@
-mod filters;
-mod layers;
+pub mod filters;
+pub mod layers;
 
 use async_trait::async_trait;
 
