@@ -1,3 +1,6 @@
+mod filters;
+mod layers;
+
 use async_trait::async_trait;
 
 use crate::service::{
@@ -9,22 +12,6 @@ pub trait Filter: Send + Sync + 'static {
     fn check(&self, header: &str) -> bool;
 }
 
-pub struct Any;
-
-impl Filter for Any {
-    fn check(&self, _: &str) -> bool {
-        true
-    }
-}
-
-pub struct StartWith(pub &'static str);
-
-impl Filter for StartWith {
-    fn check(&self, header: &str) -> bool {
-        header.starts_with(self.0)
-    }
-}
-
 pub trait Layer: Send + Sync + 'static {
     fn map_request(&self, request: Request) -> Request {
         request
@@ -32,28 +19,6 @@ pub trait Layer: Send + Sync + 'static {
 
     fn map_response(&self, response: ResponseResult) -> ResponseResult {
         response
-    }
-}
-
-pub struct LowercaseHeader;
-
-impl Layer for LowercaseHeader {
-    fn map_request(&self, request: Request) -> Request {
-        Request {
-            header: request.header.to_lowercase(),
-            ..request
-        }
-    }
-}
-
-pub struct ErrorHeader(pub &'static str);
-
-impl Layer for ErrorHeader {
-    fn map_response(&self, response: ResponseResult) -> ResponseResult {
-        response.map_err(|response| Response {
-            header: self.0.into(),
-            ..response
-        })
     }
 }
 
