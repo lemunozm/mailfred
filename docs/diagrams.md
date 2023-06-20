@@ -24,10 +24,6 @@ package transport {
         type OutboundQueue
     }
 
-    class Message
-    class Part
-    enum Kind
-
     Connector -d-> Inbound
     Connector -d-> Outbound
 
@@ -37,12 +33,20 @@ package transport {
     Inbound --> Receiver
     Outbound --> Sender
 
-    Sender --> Message
-    Receiver --> Message
+}
 
-    Message *-d--> Part
+package message {
+
+    class Message
+    class Part
+    enum Kind
+
+    Message *-d--> "n" Part
     Part *-d-> Kind
 }
+
+Sender --> Message
+Receiver --> Message
 
 package imap {
     class Imap
@@ -74,11 +78,26 @@ package service {
 }
 
 Request *-l-> Message
-Response *-l-> Part
+Response *-l-> "n" Part
 
 class ConnectionHandler<T>
 
 ConnectionHandler *-d-> Transport
+
+package router {
+    class Route
+    class Router
+    abstract Filter
+    abstract Layer
+
+    Router *-d-> "n" Route
+    Router *-d-> "n" Layer
+    Route *-r-> Filter
+}
+
+
+Router -l-|> Service
+Route *-l-> Service
 
 @enduml
 ```
