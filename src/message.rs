@@ -1,3 +1,5 @@
+use std::str::{self, Utf8Error};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Kind {
     Text,
@@ -18,6 +20,12 @@ impl Kind {
 pub struct Part {
     pub kind: Kind,
     pub content: Vec<u8>,
+}
+
+impl Part {
+    pub fn as_utf8(&self) -> Result<&str, Utf8Error> {
+        std::str::from_utf8(&self.content)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

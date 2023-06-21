@@ -72,6 +72,19 @@ pub mod response_body {
 
     pub struct ResponseBody(pub Vec<Part>);
 
+    impl ToString for ResponseBody {
+        fn to_string(&self) -> String {
+            self.0.iter().filter_map(|part| part.as_utf8().ok()).fold(
+                String::new(),
+                |mut acc, v| {
+                    acc.push_str(v);
+                    acc.push_str("\n\n");
+                    acc
+                },
+            )
+        }
+    }
+
     impl From<()> for ResponseBody {
         fn from(_: ()) -> Self {
             ResponseBody(vec![])
@@ -113,7 +126,22 @@ impl<T: Display> From<T> for Response {
     }
 }
 
-pub type ResponseResult = Result<Option<Response>, Response>;
+pub enum ErrorResponse {
+    System(Response),
+    User(Response),
+}
+
+impl<E: Into<Response>> From<E> for ErrorResponse {
+    fn from(error: E) -> Self {
+        ErrorResponse::System(error.into())
+    }
+}
+
+pub fn user_error<E: Into<Response>>(error: E) -> ErrorResponse {
+    ErrorResponse::User(error.into())
+}
+
+pub type ResponseResult = Result<Option<Response>, ErrorResponse>;
 
 impl Response {
     pub fn ok(header: impl Into<String>, body: impl Into<ResponseBody>) -> ResponseResult {
@@ -122,12 +150,21 @@ impl Response {
             body: body.into(),
         }))
     }
-    pub fn err(header: impl Into<String>, body: impl Into<ResponseBody>) -> ResponseResult {
-        Err(Response {
+
+    pub fn sys_err(header: impl Into<String>, body: impl Into<ResponseBody>) -> ResponseResult {
+        Err(ErrorResponse::System(Response {
             header: header.into(),
             body: body.into(),
-        })
+        }))
     }
+
+    pub fn user_err(header: impl Into<String>, body: impl Into<ResponseBody>) -> ResponseResult {
+        Err(ErrorResponse::User(Response {
+            header: header.into(),
+            body: body.into(),
+        }))
+    }
+
     pub fn none() -> ResponseResult {
         Ok(None)
     }
@@ -140,7 +177,8 @@ mod tests {
     #[test]
     fn responses() {
         let _ = Response::none();
-        let _ = Response::err("", "This is an error");
+        let _ = Response::sys_err("", "This is an error");
+        let _ = Response::user_err("", "This is an error");
         let _ = Response::ok("", ());
         let _ = Response::ok("", "value");
         let _ = Response::ok("", ("name", "content"));
@@ -151,9 +189,19 @@ mod tests {
     }
 
     #[test]
-    fn err_into_result() {
+    fn system_error_into_result() {
         fn foo() -> ResponseResult {
             Err("Error response")?;
+            Response::none()
+        }
+
+        let _ = foo();
+    }
+
+    #[test]
+    fn user_error_into_result() {
+        fn foo() -> ResponseResult {
+            Err("Error response").map_err(user_error)?;
             Response::none()
         }
 

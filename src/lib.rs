@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use connection_handler::PerpetualConnection;
 use message::Message;
-use service::Service;
+use service::{ErrorResponse, Service};
 use tokio::sync::Mutex;
 use transport::{Connector, Inbound};
 
@@ -44,7 +44,11 @@ pub async fn serve<S: Clone + Send + 'static>(
 
             let response = match service.call(input, state).await {
                 Ok(response) => response?,
-                Err(response) => response,
+                Err(ErrorResponse::User(response)) => response,
+                Err(ErrorResponse::System(response)) => {
+                    log::error!("System error: {}", response.body.to_string());
+                    response
+                }
             };
 
             let output = Message {
