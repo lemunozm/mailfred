@@ -1,11 +1,12 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::{
     message::Message,
     transport::{Inbound, Outbound, Receiver, Sender, Transport},
 };
 
-const MAX_RECONNETION_ATTEMPS: u32 = 10;
+const MAX_RECONN_DELAY: Duration = Duration::from_secs(60);
+const LOG_AFTER: Duration = Duration::from_secs(60);
 
 pub struct ConnectionHandler<T: Transport> {
     transport: T,
@@ -40,34 +41,41 @@ impl<T: Transport> ConnectionHandler<T> {
 
     async fn force_connect(&mut self) {
         let mut attempts: u32 = 0;
+        let mut warned = false;
+        let initial = Instant::now();
+
         loop {
-            log::trace!("{}: trying to reconnect...", self.log_name);
             match self.transport.connect().await {
                 Ok(conn) => {
                     self.conn = conn;
-                    log::trace!("{}: reconnected!", self.log_name);
-                    break;
-                }
-                Err(_) => {
-                    let waiting_secs = 2u64.pow(attempts);
 
-                    log::trace!(
-                        "{}: reconnection failed, retry in {}",
-                        self.log_name,
-                        waiting_secs
-                    );
-
-                    tokio::time::sleep(Duration::from_secs(waiting_secs)).await;
-
-                    if attempts == MAX_RECONNETION_ATTEMPS - 1 {
-                        log::warn!(
-                            "{}: Connection issue, more than {} reconnection attempts",
+                    let inactivity = Instant::now() - initial;
+                    if inactivity > LOG_AFTER {
+                        log::info!(
+                            "{}: reconnected after an inactivity period of {}:{:02}:{:02}",
                             self.log_name,
-                            attempts
+                            inactivity.as_secs() / 3600,
+                            (inactivity.as_secs() / 60) % 60,
+                            inactivity.as_secs() % 60
                         );
                     }
 
-                    attempts = (attempts + 1).max(MAX_RECONNETION_ATTEMPS);
+                    break;
+                }
+                Err(_) => {
+                    if Instant::now() - initial > LOG_AFTER && !warned {
+                        warned = true;
+                        log::warn!(
+                            "{}: disconnected for more than {} seconds",
+                            LOG_AFTER.as_secs(),
+                            self.log_name
+                        );
+                    }
+
+                    let delay = Duration::from_secs(2u64.pow(attempts)).max(MAX_RECONN_DELAY);
+                    attempts += 1;
+
+                    tokio::time::sleep(delay).await;
                 }
             }
         }
@@ -79,7 +87,7 @@ impl<T: Inbound> ConnectionHandler<T> {
         loop {
             match self.conn.recv().await {
                 Ok(msg) => {
-                    log::trace!("{}: message received from '{}'", self.log_name, msg.address);
+                    log::debug!("{}: message received from '{}'", self.log_name, msg.address);
                     break msg;
                 }
                 Err(_) => {
@@ -96,7 +104,7 @@ impl<T: Outbound> ConnectionHandler<T> {
         loop {
             match self.conn.send(&msg).await {
                 Ok(_) => {
-                    log::trace!("{}: message sent to {}", self.log_name, msg.address);
+                    log::debug!("{}: message sent to {}", self.log_name, msg.address);
                     break;
                 }
                 Err(_) => {
