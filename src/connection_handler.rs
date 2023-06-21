@@ -8,13 +8,13 @@ use crate::{
 const MAX_RECONN_DELAY: Duration = Duration::from_secs(60);
 const LOG_AFTER: Duration = Duration::from_secs(60);
 
-pub struct ConnectionHandler<T: Transport> {
+pub struct PerpetualConnection<T: Transport> {
     transport: T,
     conn: T::Connection,
     log_name: String,
 }
 
-impl<T: Transport> ConnectionHandler<T> {
+impl<T: Transport> PerpetualConnection<T> {
     pub async fn connect(transport: T, log_suffix: &str) -> Result<Self, T::Error> {
         let log_name = format!(
             "{}{}{}",
@@ -82,7 +82,7 @@ impl<T: Transport> ConnectionHandler<T> {
     }
 }
 
-impl<T: Inbound> ConnectionHandler<T> {
+impl<T: Inbound> PerpetualConnection<T> {
     pub async fn recv(&mut self) -> Message {
         loop {
             match self.conn.recv().await {
@@ -99,7 +99,7 @@ impl<T: Inbound> ConnectionHandler<T> {
     }
 }
 
-impl<T: Outbound> ConnectionHandler<T> {
+impl<T: Outbound> PerpetualConnection<T> {
     pub async fn send(&mut self, msg: &Message) {
         loop {
             match self.conn.send(&msg).await {

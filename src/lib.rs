@@ -11,7 +11,7 @@ pub mod util {
 
 use std::sync::Arc;
 
-use connection_handler::ConnectionHandler;
+use connection_handler::PerpetualConnection;
 use message::Message;
 use service::Service;
 use tokio::sync::Mutex;
@@ -24,8 +24,8 @@ pub async fn serve<S: Clone + Send + 'static>(
 ) -> Result<(), anyhow::Error> {
     let (inbound, outbound) = connector.split();
 
-    let mut receiver = ConnectionHandler::connect(inbound, "").await?;
-    let sender = ConnectionHandler::connect(outbound, "").await?;
+    let mut receiver = PerpetualConnection::connect(inbound, "").await?;
+    let sender = PerpetualConnection::connect(outbound, "").await?;
 
     let shared_sender = Arc::new(Mutex::new(sender));
     let shared_service = Arc::new(service);
@@ -63,7 +63,7 @@ pub async fn serve<S: Clone + Send + 'static>(
 
 pub async fn init_consumer_task<T: Inbound>(imap: T, log_suffix: &str) -> Result<(), T::Error> {
     let log_suffix = format!("{}-consumer", log_suffix);
-    let mut consumer = ConnectionHandler::connect(imap, &log_suffix).await?;
+    let mut consumer = PerpetualConnection::connect(imap, &log_suffix).await?;
 
     tokio::spawn(async move {
         loop {

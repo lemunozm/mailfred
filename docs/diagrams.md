@@ -80,9 +80,9 @@ package service {
 Request *-l-> Message
 Response *-l-> "n" Part
 
-class ConnectionHandler<T>
+class PerpetualConnection<T>
 
-ConnectionHandler *-d-> Transport
+PerpetualConnection *-d-> Transport
 
 package router {
     class Route
