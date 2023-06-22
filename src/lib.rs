@@ -5,7 +5,7 @@
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
-mod connection_handler;
+mod connection;
 pub mod message;
 pub mod router;
 pub mod service;
@@ -18,7 +18,7 @@ pub mod util {
 
 use std::sync::Arc;
 
-use connection_handler::PerpetualConnection;
+use connection::PerpetualConnection;
 use message::Message;
 use service::{ErrorResponse, Service};
 use tokio::sync::Mutex;
