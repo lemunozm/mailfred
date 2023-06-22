@@ -1,5 +1,11 @@
 use crate::router::Filter;
 
+impl Filter for &'static str {
+    fn check(&self, value: &str) -> bool {
+        *self == value
+    }
+}
+
 pub struct Any;
 
 impl Filter for Any {
