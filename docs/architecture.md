@@ -1,6 +1,6 @@
 # Architecture
 
-![image](https://github.com/lemunozm/mailfred/assets/15687891/8a0153cf-000c-4024-b617-0fc13126b59e)
+![image](https://github.com/lemunozm/mailfred/assets/15687891/723ad062-0eae-437b-bafc-22513bd380ec)
 
 ```plantuml
 @startuml
