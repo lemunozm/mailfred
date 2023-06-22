@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use mailfred::{
-    self,
     router::Router,
     service::{user_error, Request, Response, ResponseResult},
     transports::Gmail,

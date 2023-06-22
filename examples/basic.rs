@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use mailfred::{
-    self,
     service::{Request, Response, ResponseResult},
     transports::{Imap, Smtp},
 };

@@ -1,5 +1,4 @@
 use mailfred::{
-    self,
     service::{Request, Response, ResponseResult},
     transports::Gmail,
 };
