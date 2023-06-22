@@ -28,7 +28,7 @@ async fn main() -> Result<(), anyhow::Error> {
     };
 
     // Create a imap connection to consume all messages from that folder
-    mailfred::init_consumer_task(clean_sent_imap, "sent").await?;
+    mailfred::spawn_consumer(clean_sent_imap, "sent").await?;
 
     mailfred::serve((imap, smtp), (), echo).await
 }

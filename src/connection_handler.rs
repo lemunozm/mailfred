@@ -50,7 +50,7 @@ impl<T: Transport> PerpetualConnection<T> {
                     self.conn = conn;
 
                     let inactivity = Instant::now() - initial;
-                    if inactivity > LOG_AFTER {
+                    if inactivity >= LOG_AFTER {
                         log::info!(
                             "{}: reconnected after an inactivity period of {}:{:02}:{:02}",
                             self.log_name,
@@ -63,7 +63,7 @@ impl<T: Transport> PerpetualConnection<T> {
                     break;
                 }
                 Err(_) => {
-                    if Instant::now() - initial > LOG_AFTER && !warned {
+                    if Instant::now() - initial >= LOG_AFTER && !warned {
                         warned = true;
                         log::warn!(
                             "{}: disconnected for more than {} seconds",
@@ -91,7 +91,10 @@ impl<T: Inbound> PerpetualConnection<T> {
                     break msg;
                 }
                 Err(_) => {
-                    log::trace!("{}: receiver connection lost", self.log_name);
+                    log::trace!(
+                        "{}: receiver connection lost, Reconnecting...",
+                        self.log_name
+                    );
                     self.force_connect().await
                 }
             }
@@ -109,7 +112,7 @@ impl<T: Outbound> PerpetualConnection<T> {
                 }
                 Err(_) => {
                     log::trace!(
-                        "{}: sender connection lost. Trying to send to {}",
+                        "{}: sender connection lost. Trying to send to {}. Reconnecting...",
                         self.log_name,
                         msg.address
                     );

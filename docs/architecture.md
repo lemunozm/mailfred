@@ -1,3 +1,7 @@
+# Architecture
+
+![image](https://github.com/lemunozm/mailfred/assets/15687891/8a0153cf-000c-4024-b617-0fc13126b59e)
+
 ```plantuml
 @startuml
 hide empty members

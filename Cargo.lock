@@ -325,6 +325,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "doc-comment"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -851,6 +857,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "colored 2.0.0",
+ "doc-comment",
  "fern",
  "imap",
  "log",

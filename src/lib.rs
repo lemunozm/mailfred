@@ -1,3 +1,10 @@
+//! Check the [Github README](https://github.com/lemunozm/mailfred),
+//! to see an overview of the library.
+
+// Test rust code from README file
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md");
+
 mod connection_handler;
 pub mod message;
 pub mod router;
@@ -17,6 +24,12 @@ use service::{ErrorResponse, Service};
 use tokio::sync::Mutex;
 use transport::{Connector, Inbound};
 
+/// Main mailfred function.
+/// Initialize a server that will serve the given service throught the given
+/// connector.
+/// Note that once the transports are connected, this function never ends.
+/// If you want to finish this task, wrap it arround a `tokio::spawn` that can
+/// be cancelled.
 pub async fn serve<S: Clone + Send + 'static>(
     connector: impl Connector,
     shared_state: S,
@@ -65,7 +78,12 @@ pub async fn serve<S: Clone + Send + 'static>(
     }
 }
 
-pub async fn init_consumer_task<T: Inbound>(imap: T, log_suffix: &str) -> Result<(), T::Error> {
+/// Spawn a task that will consume the given inbound transport without
+/// processing the messages.
+/// Because the inbound method is expected to *extract* the message,
+/// it can be used to keep clean the inbound.
+/// i.e. using [`imap`] it will remove all the emails in the configured folder.
+pub async fn spawn_consumer<T: Inbound>(imap: T, log_suffix: &str) -> Result<(), T::Error> {
     let log_suffix = format!("{}-consumer", log_suffix);
     let mut consumer = PerpetualConnection::connect(imap, &log_suffix).await?;
 

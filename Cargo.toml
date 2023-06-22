@@ -51,6 +51,7 @@ chrono = { version = "0.4", optional = true }
 
 [dev-dependencies]
 serial_test = "2.0"
+doc-comment = "0.3"
 
 [[test]]
 name = "integration_transports"
