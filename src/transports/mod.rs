@@ -19,6 +19,15 @@ pub mod gmail {
         pub password: String,
     }
 
+    impl Gmail {
+        pub fn new(username: impl Into<String>, password: impl Into<String>) -> Gmail {
+            Gmail {
+                username: username.into(),
+                password: password.into(),
+            }
+        }
+    }
+
     impl Connector for Gmail {
         type Inbound = Imap;
         type Outbound = Smtp;

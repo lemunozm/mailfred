@@ -13,11 +13,7 @@ async fn main() -> Result<(), anyhow::Error> {
     #[cfg(feature = "logger")]
     mailfred::util::logger::configure(log::LevelFilter::Trace);
 
-    let (imap, smtp) = Gmail {
-        username: "user".into(),
-        password: "1234".into(),
-    }
-    .split();
+    let (imap, smtp) = Gmail::new("user", "1234").split();
 
     // Modify the default imap folder to use the sent folder instead.
     // Each email server can have each own name for this.

@@ -49,10 +49,7 @@ async fn main() -> Result<(), anyhow::Error> {
     #[cfg(feature = "logger")]
     mailfred::util::logger::configure(log::LevelFilter::Trace);
 
-    let gmail = Gmail {
-        username: "user".into(),
-        password: "1234".into(),
-    };
+    let gmail = Gmail::new("user", "1234");
 
     let router = Router::default()
         .route("Count", count)

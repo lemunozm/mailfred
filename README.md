@@ -80,10 +80,7 @@ async fn echo(req: Request, _: State) -> ResponseResult {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let gmail = Gmail {
-        username: "user".into(),
-        password: "1234".into(),
-    };
+    let gmail = Gmail::new("user", "1234");
 
     let router = Router::default()
         .route("Count", count)
