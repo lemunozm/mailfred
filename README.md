@@ -30,7 +30,7 @@ Each email sent to that email address is fetched and interpreted as if it was an
 The request email is routed to the correct service using the *subject*.
 Once it is processed by the service, a new email is sent back to the remitter as if it was an HTTP response.
 
-TODO: image
+![image](https://github.com/lemunozm/mailfred/assets/15687891/fb9f2d08-82f5-49e7-806d-ec422bf18a0a)
 
 ## Documentation
 - [API documentation](https://docs.rs/mailfred/)
