@@ -38,7 +38,7 @@ Once it is processed by the service, a new email is sent back to the remitter as
 ![image](https://github.com/lemunozm/mailfred/assets/15687891/7366bc2c-6d70-45d8-af3d-20f38edc3696)
 
 ## Documentation
-- [API documentation](https://docs.rs/mailfred/) (WIP)
+- [API documentation](https://docs.rs/mailfred/)
 - [Architecture diagram](docs/architecture.md)
 - [Examples](examples)
 

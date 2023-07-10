@@ -8,6 +8,7 @@ use crate::message::Message;
 
 pub type Request = Message;
 
+/// Represents a service that processes a request and returns a response.
 #[async_trait]
 pub trait Service<State>: Send + Sync + 'static {
     async fn call(&self, req: Request, state: State) -> ResponseResult;

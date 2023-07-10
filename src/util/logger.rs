@@ -1,6 +1,15 @@
 use colored::Colorize;
 use fern::colors::{Color, ColoredLevelConfig};
 
+/// Configures a default and basic logger for fast prototyping.
+/// Only logs coming from mailfred will be logged.
+/// If you want to log additional output using this logger you should specify
+/// the `app` target.
+/// ```
+/// # use crate::util::logger;
+/// logger::configure(log::LevelFilter::Info);
+/// info!(target: "app", "this is a user level message");
+/// ```
 pub fn configure(level_filter: log::LevelFilter) {
     let level_colors = ColoredLevelConfig::new()
         .error(Color::Red)

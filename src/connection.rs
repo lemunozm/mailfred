@@ -8,6 +8,10 @@ use crate::{
 const MAX_RECONN_DELAY: Duration = Duration::from_secs(60);
 const LOG_AFTER: Duration = Duration::from_secs(60);
 
+/// Creates a perpetual connection using a transport.
+/// A perpetual connection is a connection that never ends and never fails.
+/// If there is some error on it, it will always try to reconnect
+/// and resend the message.
 pub struct PerpetualConnection<T: Transport> {
     transport: T,
     conn: T::Connection,
@@ -15,6 +19,7 @@ pub struct PerpetualConnection<T: Transport> {
 }
 
 impl<T: Transport> PerpetualConnection<T> {
+    /// Creates a perpetual connected connection
     pub async fn connect(transport: T, log_suffix: &str) -> Result<Self, T::Error> {
         let log_name = format!(
             "{}{}{}",
@@ -83,6 +88,7 @@ impl<T: Transport> PerpetualConnection<T> {
 }
 
 impl<T: Inbound> PerpetualConnection<T> {
+    /// Receive without failing
     pub async fn recv(&mut self) -> Message {
         loop {
             match self.conn.recv().await {
@@ -103,6 +109,7 @@ impl<T: Inbound> PerpetualConnection<T> {
 }
 
 impl<T: Outbound> PerpetualConnection<T> {
+    /// Send without failing
     pub async fn send(&mut self, msg: &Message) {
         loop {
             match self.conn.send(&msg).await {

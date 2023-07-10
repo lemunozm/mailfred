@@ -4,6 +4,7 @@ use async_trait::async_trait;
 
 use crate::message::Message;
 
+/// Represents a transport that can create connections.
 #[async_trait]
 pub trait Transport: Sync + Send {
     const NAME: &'static str;
@@ -14,6 +15,7 @@ pub trait Transport: Sync + Send {
     async fn connect(&self) -> Result<Self::Connection, Self::Error>;
 }
 
+/// Represents a connection that can send messages.
 #[async_trait]
 pub trait Sender: Sized + Send {
     type Error: Error + Send + Sync + 'static;
@@ -21,6 +23,7 @@ pub trait Sender: Sized + Send {
     async fn send(&mut self, msg: &Message) -> Result<(), Self::Error>;
 }
 
+/// Represents a connection that can receive messages.
 #[async_trait]
 pub trait Receiver: Sized + Send {
     type Error: Error + Send + Sync + 'static;
@@ -28,13 +31,7 @@ pub trait Receiver: Sized + Send {
     async fn recv(&mut self) -> Result<Message, Self::Error>;
 }
 
-pub trait Inbound: Transport<Connection = Self::InboundQueue> + 'static {
-    type InboundQueue: Receiver;
-}
-impl<T: Transport<Connection = C> + 'static, C: Receiver> Inbound for T {
-    type InboundQueue = C;
-}
-
+/// Represents a transport that can create connections to send messages.
 pub trait Outbound: Transport<Connection = Self::OutboundQueue> + 'static {
     type OutboundQueue: Sender;
 }
@@ -42,6 +39,16 @@ impl<T: Transport<Connection = C> + 'static, C: Sender> Outbound for T {
     type OutboundQueue = C;
 }
 
+/// Represents a transport that can create connections to receive messages.
+pub trait Inbound: Transport<Connection = Self::InboundQueue> + 'static {
+    type InboundQueue: Receiver;
+}
+impl<T: Transport<Connection = C> + 'static, C: Receiver> Inbound for T {
+    type InboundQueue = C;
+}
+
+/// Represent a full-duplex transport that can create connections for both,
+/// send and receive
 #[async_trait]
 pub trait Connector: Sized + Sync + Send {
     type Inbound: Inbound;
