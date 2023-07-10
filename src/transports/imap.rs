@@ -101,16 +101,15 @@ fn listener(
             }
         }
 
-        if fetches.len() > 0 {
+        if !fetches.is_empty() {
             session.expunge()?;
         } else {
             // If a message is sent here, before initialize the IDLE,
             // the server could not notify it.
             // See issue: https://github.com/jonhoo/rust-imap/issues/263
-            session.idle().wait_while(|response| match response {
-                UnsolicitedResponse::Exists(_) => false,
-                _ => true,
-            })?;
+            session
+                .idle()
+                .wait_while(|response| !matches!(response, UnsolicitedResponse::Exists(_)))?;
         }
     }
 }

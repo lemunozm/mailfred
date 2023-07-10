@@ -61,7 +61,7 @@ pub mod response_part {
         fn from((name, content): (N, Vec<u8>)) -> Self {
             ResponsePart {
                 kind: Kind::Attachment(name.as_ref().into()),
-                content: content.into(),
+                content,
             }
         }
     }

@@ -112,7 +112,7 @@ impl<T: Outbound> PerpetualConnection<T> {
     /// Send without failing
     pub async fn send(&mut self, msg: &Message) {
         loop {
-            match self.conn.send(&msg).await {
+            match self.conn.send(msg).await {
                 Ok(_) => {
                     log::debug!("{}: message sent to {}", self.log_name, msg.address);
                     break;

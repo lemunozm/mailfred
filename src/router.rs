@@ -45,7 +45,7 @@ where
     S: Service<State>,
 {
     async fn call(&self, request: Request, state: State) -> ResponseResult {
-        self.service.call(request, state).await.into()
+        self.service.call(request, state).await
     }
 }
 
