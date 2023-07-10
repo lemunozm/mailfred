@@ -1,7 +1,7 @@
-[![](https://img.shields.io/crates/v/mailfred)](https://crates.io/crates/mailfred)
-[![](https://img.shields.io/docsrs/mailfred)](https://docs.rs/mailfred)
-[![](https://img.shields.io/crates/l/mailfred)](https://www.apache.org/licenses/LICENSE-2.0.txt)
-[![](https://img.shields.io/github/actions/workflow/status/lemunozm/mailfred/.github/workflows/rust.yml?branch=master)](https://github.com/lemunozm/mailfred/actions?query=workflow%3A%22All)
+![Crates.io](https://img.shields.io/crates/v/mailfred)
+![docs.rs](https://img.shields.io/docsrs/mailfred/latest)
+![Crates.io](https://img.shields.io/crates/l/mailfred)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/lemunozm/mailfred/ci.yml)
 [![](https://img.shields.io/badge/bymeacoffee-donate-yellow)](https://www.buymeacoffee.com/lemunozm)
 
 
