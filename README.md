@@ -98,3 +98,10 @@ If you want to use a *Gmail* account, you need to set up some things before:
 1. Create a new account, do NOT use your normal account. The `mailfred`'s *IMAP* transport removes the messages it reads from the inbox.
 2. Enable *IMAP* in the *Gmail* configuration.
 3. Enable [Gmail's app passwords](https://support.google.com/accounts/answer/185833?hl=en) for the account.
+
+## Contribute
+- *Have you implemented a router filter layer or a new transport?*
+  Share it with others! Make a *Pull Request* so everyone can use it :)
+
+- *Do you like the idea and want to contribute? have you found a **bug** or have any **question** or **doubt**?*
+  Do not hesitate and open an issue!
