@@ -7,7 +7,7 @@
 
 # Mailfred
 
-Expose services through the email infrastructure.
+Expose services through the email infrastructure processing emails as requests & responses.
 
 ## Motivation
 
