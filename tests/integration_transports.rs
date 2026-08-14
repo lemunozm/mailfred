@@ -118,10 +118,9 @@ async fn roundtrip_sync() {
 
     let mut imap = imap_transport().connect().await.unwrap();
 
-    let messages = messages();
-    for i in 0..messages.len() {
+    for (i, expected) in messages().iter().enumerate() {
         let msg = imap.recv().await.unwrap();
-        assert_eq!(msg, messages[i], "Message {i}");
+        assert_eq!(&msg, expected, "Message {i}");
     }
 }
 
@@ -142,10 +141,9 @@ async fn roundtrip_async() {
         }
     });
 
-    let messages = messages();
-    for i in 0..messages.len() {
+    for (i, expected) in messages().iter().enumerate() {
         let msg = imap.recv().await.unwrap();
-        assert_eq!(msg, messages[i], "Message {i}");
+        assert_eq!(&msg, expected, "Message {i}");
     }
 }
 

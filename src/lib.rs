@@ -59,7 +59,7 @@ pub async fn serve<S: Clone + Send + 'static>(
                 Ok(response) => response?,
                 Err(ErrorResponse::User(response)) => response,
                 Err(ErrorResponse::System(response)) => {
-                    log::error!("System error: {}", response.body.to_string());
+                    log::error!("System error: {}", response.body);
                     response
                 }
             };

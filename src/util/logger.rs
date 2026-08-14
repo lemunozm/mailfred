@@ -6,9 +6,10 @@ use fern::colors::{Color, ColoredLevelConfig};
 /// If you want to log additional output using this logger you should specify
 /// the `app` target.
 /// ```
-/// # use crate::util::logger;
+/// use mailfred::util::logger;
+///
 /// logger::configure(log::LevelFilter::Info);
-/// info!(target: "app", "this is a user level message");
+/// log::info!(target: "app", "this is a user level message");
 /// ```
 pub fn configure(level_filter: log::LevelFilter) {
     let level_colors = ColoredLevelConfig::new()

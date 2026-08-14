@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 
 pub use response_body::{Parts, ResponseBody};
 pub use response_part::{Html, ResponsePart};
@@ -72,16 +72,17 @@ pub mod response_body {
 
     pub struct ResponseBody(pub Vec<Part>);
 
-    impl ToString for ResponseBody {
-        fn to_string(&self) -> String {
-            self.0.iter().filter_map(|part| part.as_utf8().ok()).fold(
-                String::new(),
-                |mut acc, v| {
-                    acc.push_str(v);
-                    acc.push_str("\n\n");
-                    acc
-                },
-            )
+    /// Implemented as `Display` instead of as `ToString`: the blanket
+    /// implementation of the standard library gives `to_string()` for free,
+    /// and it also makes the body usable anywhere a formattable value is
+    /// expected.
+    impl fmt::Display for ResponseBody {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            for part in self.0.iter().filter_map(|part| part.as_utf8().ok()) {
+                write!(f, "{}\n\n", part)?;
+            }
+
+            Ok(())
         }
     }
 
@@ -201,7 +202,11 @@ mod tests {
     #[test]
     fn user_error_into_result() {
         fn foo() -> ResponseResult {
-            Err("Error response").map_err(user_error)?;
+            // The error comes from a binding, and not from `Err(..)` directly,
+            // to check the case a service really finds: mapping the error of
+            // an already existing result.
+            let failing: Result<(), &str> = Err("Error response");
+            failing.map_err(user_error)?;
             Response::none()
         }
 
