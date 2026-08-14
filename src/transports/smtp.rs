@@ -1,3 +1,5 @@
+use std::io;
+
 use async_trait::async_trait;
 use mail_builder::{mime::MimePart, MessageBuilder as EmailBuilder};
 use mail_send::{self as smtp, SmtpClient, SmtpClientBuilder};
@@ -25,6 +27,10 @@ impl Transport for Smtp {
 
     async fn connect(&self) -> smtp::Result<Self::Connection> {
         let client = SmtpClientBuilder::new(self.domain.as_ref(), self.port)
+            // Building the client only fails while setting up TLS, and
+            // `mail_send` reports it as a plain string with no error variant
+            // of its own to map it to.
+            .map_err(|err| smtp::Error::Io(io::Error::other(err)))?
             .implicit_tls(false)
             .credentials((self.user.as_ref(), self.password.as_ref()))
             .connect()

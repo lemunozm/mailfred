@@ -35,9 +35,21 @@ log = "0.4"
 anyhow = "1"
 
 # smtp
-mail-send = { version = "=0.4.0", optional = true }
-mail-builder = { version = "0.3", optional = true }
-tokio-rustls = { version = "0.24", optional = true }
+# `dkim` is intentionally out of the feature list: mailfred never signs the
+# messages it sends, and that feature pulls a whole DNS resolver to do it.
+# `ring` is chosen over the default `aws_lc_rs` to keep the C toolchain out of
+# the build, as the previous version of this dependency did.
+mail-send = { version = "0.6", default-features = false, features = [
+  "builder",
+  "ring",
+  "tls12",
+  "cram-md5",
+  "digest-md5",
+], optional = true }
+mail-builder = { version = "0.4", optional = true }
+# Only used to name the stream type of the smtp connection, so it does not need
+# a crypto provider of its own: `mail-send` already selects one.
+tokio-rustls = { version = "0.26", default-features = false, optional = true }
 
 # imap
 imap = { version = "=3.0.0-alpha.10", optional = true }
