@@ -166,6 +166,46 @@ async fn run_and_stop() {
     handle.abort();
 }
 
+/// The IMAP listener refreshes its `IDLE` command periodically, which is what
+/// keeps a dead connection from going unnoticed. That refresh must not lose
+/// the notification of a message arriving after it, so this test stays quiet
+/// long enough to cross several refresh periods before sending anything.
+///
+/// It is ignored because it takes minutes: the refresh period is measured in
+/// minutes by design, so there is nothing to shorten here.
+#[ignore] // Takes ~5 minutes, run it manually
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::serial]
+async fn recv_after_several_idle_refreshes() {
+    const QUIET: Duration = Duration::from_secs(5 * 60);
+
+    imap_transport().clear_folder("inbox").unwrap();
+
+    let mut imap = imap_transport().connect().await.unwrap();
+
+    // Nothing is sent meanwhile, so the listener sits in IDLE and refreshes it
+    tokio::time::sleep(QUIET).await;
+
+    let expected = Message {
+        address: env::user(),
+        header: "After idle".into(),
+        body: vec![Part {
+            kind: Kind::Text,
+            content: "still alive".as_bytes().into(),
+        }],
+    };
+
+    let mut smtp = smtp_transport().connect().await.unwrap();
+    smtp.send(&expected).await.unwrap();
+
+    let received = tokio::time::timeout(Duration::from_secs(120), imap.recv())
+        .await
+        .expect("the message was not notified after the idle refreshes")
+        .unwrap();
+
+    assert_eq!(received, expected);
+}
+
 #[ignore] // Used only for manual testing
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::serial]

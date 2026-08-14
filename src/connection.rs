@@ -72,12 +72,20 @@ impl<T: Transport> PerpetualConnection<T> {
                         warned = true;
                         log::warn!(
                             "{}: disconnected for more than {} seconds",
-                            LOG_AFTER.as_secs(),
-                            self.log_name
+                            self.log_name,
+                            LOG_AFTER.as_secs()
                         );
                     }
 
-                    let delay = Duration::from_secs(2u64.pow(attempts)).max(MAX_RECONN_DELAY);
+                    // Exponential backoff capped to `MAX_RECONN_DELAY`.
+                    // `checked_pow` is needed because `attempts` is unbounded:
+                    // a long enough disconnection would overflow the exponent.
+                    let delay = 2u64
+                        .checked_pow(attempts)
+                        .map(Duration::from_secs)
+                        .unwrap_or(MAX_RECONN_DELAY)
+                        .min(MAX_RECONN_DELAY);
+
                     attempts += 1;
 
                     tokio::time::sleep(delay).await;

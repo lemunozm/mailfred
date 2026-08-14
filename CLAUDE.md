@@ -56,6 +56,14 @@ Data flows: **Inbound transport → `PerpetualConnection` → `serve` loop → `
   `spawn_blocking` and bridges to async over an mpsc channel; a `Notify` handshake ensures a message is only
   flagged deleted once the async side is actually ready to receive it (no message is lost on shutdown).
 
+  The listener loop has three invariants that are easy to break. **Always address messages by UID**
+  (`uid_fetch`/`uid_store`), never by sequence number — sequence numbers are renumbered by any client's
+  expunge, so a stale one deletes the wrong message. **Every message must eventually leave the pending
+  set**, either deleted or marked with the `mailfred-unprocessable` keyword; if one can be listed forever,
+  the loop never reaches its `IDLE` branch and busy-loops over the whole folder. And **`IDLE` is refreshed
+  on a short `timeout()` with keepalive left on**, because that timeout doubles as the socket read timeout —
+  it is the only thing that detects a connection killed by a suspend or a dropped NAT entry.
+
 - `src/connection.rs` — `PerpetualConnection<T>` wraps a transport so `recv`/`send` have no error type: any
   failure triggers reconnection (with backoff) and retry. This is why `serve` has no error handling in the
   loop body; errors surface only at initial connect.
