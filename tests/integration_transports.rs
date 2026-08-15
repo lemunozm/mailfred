@@ -164,6 +164,26 @@ async fn run_and_stop() {
     handle.abort();
 }
 
+/// Dropping a connection must also end the blocking listener thread behind it,
+/// which is done by shutting down the socket it is parked on. A server only
+/// accepts a limited number of simultaneous connections (Gmail allows about
+/// 15), so opening and dropping many more than that only succeeds if every
+/// drop really released its socket.
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::serial]
+async fn dropped_connections_release_the_socket() {
+    const CONNECTIONS: usize = 25;
+
+    for i in 0..CONNECTIONS {
+        let connection = imap_transport()
+            .connect()
+            .await
+            .unwrap_or_else(|err| panic!("connection {i} could not be opened: {err}"));
+
+        drop(connection);
+    }
+}
+
 /// The IMAP listener refreshes its `IDLE` command periodically, which is what
 /// keeps a dead connection from going unnoticed. That refresh must not lose
 /// the notification of a message arriving after it, so this test stays quiet

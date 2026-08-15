@@ -52,7 +52,10 @@ mail-builder = { version = "0.4", optional = true }
 tokio-rustls = { version = "0.26", default-features = false, optional = true }
 
 # imap
-imap = { version = "=3.0.0-alpha.10", optional = true }
+# Pinned exactly: the 3.0 line is still a prerelease and its API changes
+# between alphas. It is nevertheless preferred over the last stable (2.4.1,
+# from 2021), which predates the whole 3.0 line and is no longer maintained.
+imap = { version = "=3.0.0-alpha.15", optional = true }
 mail-parser = { version = "0.8", optional = true }
 native-tls = { version = "0.2", optional = true }
 

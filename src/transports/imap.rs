@@ -8,7 +8,7 @@ use std::{
 use async_trait::async_trait;
 use imap::{
     types::{Flag, Uid, UnsolicitedResponse},
-    ClientBuilder, Session,
+    Client, ClientBuilder, Session,
 };
 use mail_parser::{Addr, HeaderValue, Message as EmailParser, MimeHeaders};
 use native_tls::{TlsConnector, TlsStream};
@@ -63,19 +63,29 @@ impl Transport for Imap {
 
     async fn connect(&self) -> imap::Result<ImapConnection> {
         let (session, tcp) = tokio::task::block_in_place(move || -> imap::Result<_> {
-            let mut tcp_stream = None;
-            let client = ClientBuilder::new(&self.domain, self.port).connect(|domain, tcp| {
-                tcp_stream = Some(tcp.try_clone()?);
-                let ssl_conn = TlsConnector::builder().build()?;
-                Ok(TlsConnector::connect(&ssl_conn, domain, tcp)?)
-            })?;
+            // The connection is built by hand, instead of through
+            // `ClientBuilder`, to keep a handle of the plain TCP stream:
+            // the builder hides the stream behind a sealed trait, and this
+            // handle is the only way to unblock the listener thread when the
+            // connection is dropped (see `Drop for ImapConnection`).
+            let tcp = TcpStream::connect((self.domain.as_str(), self.port))?;
+            let tcp_handle = tcp.try_clone()?;
+
+            let tls = TlsConnector::builder()
+                .build()?
+                .connect(&self.domain, tcp)?;
+
+            // The port is expected to be an implicit TLS one (993), so the
+            // greeting comes already through the encrypted stream.
+            let mut client = Client::new(tls);
+            client.read_greeting()?;
 
             let mut session = client
                 .login(&self.user, &self.password)
                 .map_err(|(e, _)| e)?;
 
             session.select(&self.folder)?;
-            Ok((session, tcp_stream.expect("a session must have a stream")))
+            Ok((session, tcp_handle))
         })?;
 
         let ready_to_recv = Arc::new(Notify::new());
@@ -283,7 +293,8 @@ fn read_email(email_raw: &[u8]) -> Option<Message> {
 
 impl Imap {
     pub fn clear_folder(&self, folder: &str) -> imap::Result<()> {
-        let client = imap::ClientBuilder::new(&self.domain, self.port).native_tls()?;
+        // No handle of the stream is needed here, so the builder is enough
+        let client = ClientBuilder::new(&self.domain, self.port).connect()?;
         let mut session = client.login(&self.user, &self.password).map_err(|e| e.0)?;
 
         session.select(folder)?;
