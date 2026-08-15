@@ -43,6 +43,7 @@ Once it is processed by the service, a new email is sent back to the remitter as
 - [API documentation](https://docs.rs/mailfred/)
 - [Architecture diagram](docs/architecture.md)
 - [Examples](examples)
+- [Changelog](CHANGELOG.md)
 
 ## Getting started
 Add the following to your `Cargo.toml`:
