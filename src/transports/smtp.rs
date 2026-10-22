@@ -1,8 +1,11 @@
 use std::io;
 
 use async_trait::async_trait;
-use mail_builder::{mime::MimePart, MessageBuilder as EmailBuilder};
-use mail_send::{self as smtp, SmtpClient, SmtpClientBuilder};
+use mail_send::{
+    self as smtp,
+    mail_builder::{mime::MimePart, MessageBuilder as EmailBuilder},
+    SmtpClient, SmtpClientBuilder,
+};
 use tokio::net::TcpStream;
 use tokio_rustls::client::TlsStream;
 
