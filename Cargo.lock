@@ -56,6 +56,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "base64"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+
+[[package]]
 name = "bitflags"
 version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -211,7 +217,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -419,7 +425,7 @@ version = "3.0.0-alpha.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25b81eb9a89c9a40e9d6c670d9b3c4cda734573592bd49b7cd906152c95d9af2"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bufstream",
  "chrono",
  "imap-proto",
@@ -447,7 +453,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -551,9 +557,9 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "mail-builder"
-version = "0.4.4"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "900998f307338c4013a28ab14d760b784067324b164448c6d98a89e44810473b"
+checksum = "4c942e8a4b83f9351236c1e531ea9fa0237913d63c7fc36818430e0128a1ddf3"
 dependencies = [
  "gethostname",
 ]
@@ -569,11 +575,11 @@ dependencies = [
 
 [[package]]
 name = "mail-send"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc851b8321041a68cc3b017135b6b8d2789a8b6e455aaebe60594bd6a39b2268"
+checksum = "8355326d14f08c9de5e9badfe606d9ba8fea2febb60fe4318ecbac33cfb7b41e"
 dependencies = [
- "base64",
+ "base64 0.23.1",
  "gethostname",
  "mail-builder",
  "md5",
@@ -588,7 +594,7 @@ dependencies = [
 
 [[package]]
 name = "mailfred"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -599,7 +605,6 @@ dependencies = [
  "fern",
  "imap",
  "log",
- "mail-builder",
  "mail-parser",
  "mail-send",
  "native-tls",
@@ -933,7 +938,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -989,7 +994,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1213,7 +1218,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1397,7 +1402,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
